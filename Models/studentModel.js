@@ -49,9 +49,16 @@ const studentSchema = mongoose.Schema({
         type: String,
         data: Buffer,
         default: ''
-    }
-}, {
-    timestamps: true,
-});
+    },
+
+    role: {
+        type: String,
+        enum: ['admin', 'teacher', 'student'],
+        default: 'student'
+    },
+
+        timestamps: true,
+    
+    });
 
 module.exports = mongoose.model('Student', studentSchema)

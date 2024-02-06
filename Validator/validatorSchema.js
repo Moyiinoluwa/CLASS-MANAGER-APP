@@ -6,6 +6,8 @@ const joi = require('joi')
  
  //registration validation
 const signupValidator = joi.object({
+    surname: joi.string().required(),
+    name: joi.string().required(),
     username: joi.string().lowercase().required(),
     email: joi.string().email().lowercase().required(),
     password: joi.string().min(8).max(16).required()

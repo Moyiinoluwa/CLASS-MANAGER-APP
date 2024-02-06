@@ -1,12 +1,15 @@
 const asyncHandler = require('express-async-handler');
 const Teachers = require('../Models/teacherModel');
+const students  = require('../Models/studentModel')
 const teachOtp = require('../Models/teacherOtpModel')
+const StudentScore = require('../Models/studentScore')
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken')
 const { registerTeacherValidator,  teacherLoginValidator, verifyTeacherOtpValidator, 
     resendTeacherOtp, resetTeacherPasswordLinkValidator, teacherPasswordlLinkValidator, 
     changePasswordValidator} = require('../Validator/teacherValidatorSchema');
-const { verificationMail, verifyOtpMail, passwordResetLinkMail } = require('../Shared/mailer');
+const { verificationMail, verifyOtpMail,
+     passwordResetLinkMail, teacherSendMailToStudents, teacherSendMailToAStudent } = require('../Shared/mailer');
 
 
 
@@ -47,7 +50,7 @@ const register_Teacher = asyncHandler(async (req, res) => {
             res.status(400).json(error.message)
         };
 
-        const { username, email, password } = req.body;
+        const { surname, name, subject, qualification, username, email, password } = req.body;
 
         //check if teacher has been registered
         const teacher = await Teachers.findOne({ email })
@@ -60,6 +63,10 @@ const register_Teacher = asyncHandler(async (req, res) => {
 
         //create a new teacher account
         const newTeacher = Teachers({
+            surname,
+            name,
+            subject,
+            qualification,
             username,
             email,
             password: hash
@@ -399,6 +406,104 @@ const uploadPics = asyncHandler(async(req, res) => {
 });
 
 
+// Edit student's score
+const editScore = asyncHandler(async(req, res) => {
+    try {
+        const { email, score, subject , id} = req.body
+
+        //check if teacher is registered
+        const teacher = await Teachers.findOne({ email }) 
+        if(!teacher) {
+            res.status(404).json({ message: 'teacher cant access'})
+        }
+
+        //if the student is registered
+        const theStudent = await students.findById({ id })
+        if(!theStudent) {
+            res.status(404).json({ message: 'non student'})
+        }
+
+        //update the student score
+         const updateScore = await StudentScore.findOne({ student })
+         updateScore.student = theStudent.id
+         updateScore.subject = subject
+         updateScore.score = score
+
+         //save to database 
+         await updateScore.save()
+
+    } catch (error) {
+        throw error
+    }
+});
+
+//Teacher sends a message to all students
+const sendMessageToAll = asyncHandler(async(req, res) => {
+    try {
+
+        const student = await students.find()
+        if(!student) {
+            res.status(404).json({ message: 'student not in class' })
+        }
+
+        //send message to students email
+        await teacherSendMailToStudents(student.email)
+
+        res.status(200).json({ message: 'Email sent to all students' })
+    } catch (error) {
+        throw error
+    }
+});
+
+//Teacher sends message to a student
+const sendMessageToOne = asyncHandler(async(req, res) => {
+    try {
+        const { id } = req.params;
+
+        //if student is registered
+        const student = await students.findById({ id })
+        if(!student) {
+            res.status(404).json({ message: 'wrong student'})
+        }
+
+        //send message to the student via mail
+        await teacherSendMailToAStudent(student.email)
+
+        res.status(200).json({ message: 'Email sent to the student'})
+    } catch (error) {
+        throw error
+    }
+});
+
+//Teacher uploads assignment
+const postAssignment = asyncHandler(async(req, res) => {
+    try {
+        const  { id } = req.params
+
+        //check if teacher is regsitered
+        const teacher = await Teachers.findOne({ email })
+        if(!teacher) {
+            res.status(404).json({ message:'teacher cant upload'})
+        }
+
+        const assign = req.file.filename
+        teacher.assignment = assign
+
+        await teacher.save()
+
+        res.status(200).json({ message: 'assignment uploaded'})
+    } catch (error) {
+        throw error
+    }
+});
+
+//Teacher uploads each students score
+
+//Teacher receives students message in the inbox
+
+
+
+
 module.exports = {
     get_Teacher,
     get_Teacher_Id,
@@ -411,5 +516,9 @@ module.exports = {
     change_Password,
     update_Teacher,
     delete_Teacher,
-    uploadPics
+    uploadPics,
+    editScore,
+    sendMessageToAll,
+    sendMessageToOne,
+    postAssignment
 }

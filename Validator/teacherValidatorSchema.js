@@ -6,6 +6,10 @@ const joi = require('joi')
 
  //Registration validator
  const registerTeacherValidator = joi.object({
+    surname: joi.string().required(),
+    name: joi.string().required(),
+    subject: joi.string().required(),
+    qualification: joi.string().required(),
     username: joi.string().lowercase().required(),
     email: joi.string().email().required(),
     password: joi.string().min(8).max(16).required()

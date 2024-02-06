@@ -47,7 +47,7 @@ const registerStudent = asyncHandler(async (req, res) => {
             res.status(400).json(error.message)
         }
 
-        const { username, email, password } = req.body;
+        const {surname, name, username, email, password } = req.body;
 
         //check if student already exists
         const user = await Student.findOne({ email })
@@ -60,6 +60,8 @@ const registerStudent = asyncHandler(async (req, res) => {
 
         //create a new account
         const newStudent = Student({
+            surname,
+            name,
             username,
             email,
             password: hash
@@ -332,20 +334,20 @@ const changePassword = asyncHandler(async (req, res) => {
         //compare the password
         if (student && await bcrypt.compare(oldPassword, student.password)) {
             res.status(200).json({ message: 'correct password' })
-         
 
-        //hash the new password 
-        const hashN = await bcrypt.hash(newPassword, 10)
 
-        //reset the student password in the database
-        student.password = hashN;
+            //hash the new password 
+            const hashN = await bcrypt.hash(newPassword, 10)
 
-        //save to the database
-        await student.save()
+            //reset the student password in the database
+            student.password = hashN;
 
-        res.status(200).json({ message: 'password changed' }) 
+            //save to the database
+            await student.save()
+
+            res.status(200).json({ message: 'password changed' })
         } else {
-            res.status(400).json({ message: 'incorrect password'})
+            res.status(400).json({ message: 'incorrect password' })
         }
 
     } catch (error) {
@@ -405,18 +407,38 @@ const profilePic = asyncHandler(async (req, res) => {
         }
 
         const image = req.file.filename
-        student.profilePicture= image
+        student.profilePicture = image
 
         //save to database 
         await student.save()
 
-        res.status(200).json({ message: 'profile picture uploaded'})
+        res.status(200).json({ message: 'profile picture uploaded' })
     } catch (error) {
         throw error
     }
 });
 
+//sumbit student assignment just once
+const sumbitAssignment = asyncHandler(async (req, res) => {
+    try {
+        const student = await Student.findOne({ email })
+        //check if student exists
+        if (!student) {
+            res.status(404).json({ message: 'not student' })
+        }
 
+
+    } catch (error) {
+        throw error
+    }
+})
+
+
+// Studens can see the marks they got
+//Students can see the list of the teachers and can message them
+//student can message each other
+//Student can see list of students and view their profile
+//student can search for each other
 module.exports = {
     getStudent,
     getStudentId,

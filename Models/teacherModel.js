@@ -51,8 +51,18 @@ const teacherSchema = mongoose.Schema({
         type: String,
         data: Buffer,
         default: ''
-    }
+    },
 
+    role: {
+        type: String,
+        enum: ['admin', 'teacher', 'student'],
+        default: 'teacher'
+    },
+
+    assignment: {
+        type: String,
+        default: ''
+    }
 }, {
     timestamps: true
 });

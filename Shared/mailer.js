@@ -57,12 +57,58 @@ const passwordResetLinkMail = async (email, verifyCode, username) => {
     await mail.mailService.sendEmail(email, subject, body)
 }
 
+const teacherSendMailToStudents = async (email, username) => {
+    const subject = 'Class Postponed'
+    const body = `<!DOCTYPE HTML>
+    <html>
+    <head>
+    </head>
+    <body>
+    <h1>Notice</h1>
+    <h1>Hello ${username}</h1>
+    <h1> Please be informed that the Class for today has been cancelled.</h1>
+    <P> The time for the next class will be announced by your class rep</P>
+    <p> Enjoy the rest of your day</p>
+    <p> Thank You.</p>
 
+    <p> Regards</p>
+
+    <p> Mrs Caleb </p>
+    </body>
+    </html>
+    `
+    await mail.mailService.sendEmail(email, subject, body)
+}
+
+
+const teacherSendMailToAStudent = async (email, username) => {
+    const subject = 'SEE ME!'
+    const body = `<!DOCTYPE HTML>
+    <html>
+    <head>
+    </head>
+    <body>
+    <h1>Hello ${username}</h1>
+    <h1> You must see me before the end of today.</h1>
+    <P> Failure to do so will attract punishment</P>
+    <p> Enjoy the rest of your day</p>
+    <p> Thank You.</p>
+
+    <p> Regards</p>
+
+    <p> Mr Caleb </p>
+    </body>
+    </html>
+    `
+    await mail.mailService.sendEmail(email, subject, body)
+}
 
 
 
 module.exports = {
     verificationMail,
     verifyOtpMail,
-    passwordResetLinkMail
+    passwordResetLinkMail,
+    teacherSendMailToStudents,
+    teacherSendMailToAStudent
 }

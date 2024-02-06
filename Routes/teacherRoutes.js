@@ -2,6 +2,7 @@ const express = require('express')
 const Controller = require('../Controlers/teacherController')
 const router = express.Router()
 const upload = require('../Middleware/uploadProfilePicture')
+const homeWork = require('../Middleware/uploadAssignment')
 
 //get all registered teachers
 router.get('/get', Controller.get_Teacher)
@@ -38,6 +39,18 @@ router.delete('/delete/:id', Controller.delete_Teacher)
 
 //upload profile picture
 router.post('/upload/:id', upload, Controller.uploadPics)
+
+//Edit student score
+router.put('/update/:id/score', Controller.editScore)
+
+//Teacher sends mail to all student
+router.post('/send-mails', Controller.sendMessageToAll)
+
+//Teacher sends mail to a student
+router.post('/send-to-student', Controller.sendMessageToOne)
+
+//teacher Uploads an assignment
+router.post('/assignment', homeWork, Controller.postAssignment)
 
 
 
