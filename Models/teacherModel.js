@@ -59,10 +59,6 @@ const teacherSchema = mongoose.Schema({
         default: 'teacher'
     },
 
-    assignment: {
-        type: String,
-        default: ''
-    }
 }, {
     timestamps: true
 });

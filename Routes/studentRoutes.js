@@ -39,5 +39,20 @@ router.delete('/delete/:id', Controller.deleteStudent )
 //upload profile picture
 router.post('/upload/:id', upload, Controller.profilePic)
 
+//send message to teacher
+router.post('/message-teacher',  Controller.messageTeacher)
+
+//send message to fellow student
+router.post('/message-student', Controller.messageStudent)
+
+//view student profile
+router.get('/view-profile', Controller.studentList)
+
+//search for a student
+router.get('/student-page', Controller.findStudent)
+
+//chatroom
+router.post('/chatroom', Controller.studentChatRoom)
+
 
 module.exports = router;

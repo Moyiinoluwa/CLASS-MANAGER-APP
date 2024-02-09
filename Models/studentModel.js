@@ -56,9 +56,9 @@ const studentSchema = mongoose.Schema({
         enum: ['admin', 'teacher', 'student'],
         default: 'student'
     },
-
-        timestamps: true,
     
+    }, {
+        timestamps: true
     });
 
 module.exports = mongoose.model('Student', studentSchema)

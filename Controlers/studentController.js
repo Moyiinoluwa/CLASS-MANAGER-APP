@@ -3,6 +3,9 @@ const Student = require('../Models/studentModel')
 const bcrypt = require('bcrypt')
 const Otp = require('../Models/otpStudentModel')
 const jwt = require('jsonwebtoken')
+const Assignment = require('../Models/assignmentModel')
+const Teachers = require('../Models/teacherModel')
+const Message = require('../Models/messageModel')
 const { signupValidator, loginValidator,
     verifyOtpValidator, resendOtpValidator,
     resetPasswordLinkValidator, setPasswordValidator,
@@ -21,8 +24,8 @@ const generateOtp = () => {
 // Get all students
 const getStudent = asyncHandler(async (req, res) => {
     //find all registered students
-    const user = await Student.find()
-    res.status(200).json(user)
+    const student = await Student.find()
+    res.status(200).json(student)
 });
 
 //Get a student
@@ -47,7 +50,7 @@ const registerStudent = asyncHandler(async (req, res) => {
             res.status(400).json(error.message)
         }
 
-        const {surname, name, username, email, password } = req.body;
+        const { surname, name, username, email, password } = req.body;
 
         //check if student already exists
         const user = await Student.findOne({ email })
@@ -434,11 +437,157 @@ const sumbitAssignment = asyncHandler(async (req, res) => {
 })
 
 
-// Studens can see the marks they got
+// Students can see the marks they got
+const studentScore = asyncHandler(async (req, res) => {
+    try {
+        const { student_id, email } = req.body;
+
+        //check if student is registered
+        const student = await Student.findOne({ email })
+        if (!student) {
+            res.status(404).json({ message: 'student cant see score' })
+        }
+
+        //student view score on profile
+        const stuudent = await Assignment.findOne({ student_id })
+        stuudent.score = student.score
+        stuudent.subject = 
+
+    } catch (error) {
+        throw error
+    }
+});
 //Students can see the list of the teachers and can message them
+const messageTeacher = asyncHandler(async (req, res) => {
+    try {
+        const { email, message } = req.body
+
+        //check if student is registred
+        const student = await Student.findOne({ email })
+        if (!student) {
+            res.status(404).json({ message: 'unknown student' })
+        }
+
+        //find all teachers
+        const teacherList = await Teachers.find()
+        res.status(200).json(teacherList)
+
+        //send message to teacher's inbox
+        const teacher = await Teachers.findOne({ email })
+        if (!teacher) {
+            res.status(404).json({ message: 'cant find teacher' })
+        }
+
+        //create a new message and send to the teacher
+        const text = new Message({
+            teacher_id: teacher._id,
+            student_id: student._id,
+            message: message
+        })
+
+        //save to database
+        await text.save()
+
+    } catch (error) {
+        throw error
+    }
+});
 //student can message each other
+const messageStudent = asyncHandler(async (req, res) => {
+    try {
+
+        const { email, message } = req.body
+
+        //if student is registered
+        const student = await Student.findOne({ email })
+        if (!student) {
+            res.status(404).json({ message: 'void student' })
+        }
+
+        //find the other student
+        const aStudent = await Student.findById(req.params.id)
+        if (!aStudent) {
+            res.status(404).json({ message: 'student not found by id' })
+        }
+
+        //student sends message to each other
+        const newText = new Message({
+            student_id: student._id,
+            message: message
+        })
+
+        //save to database
+        await newText.save()
+
+    } catch (error) {
+        throw error
+    }
+});
 //Student can see list of students and view their profile
+const studentList = asyncHandler(async (req, res) => {
+    try {
+
+        //find all the students
+        const student = await Student.find()
+        res.status(200).json(student)
+
+        //view student's profile
+        const { id } = req.params
+
+        const viewStudent = await Student.findById(id)
+        if (!viewStudent) {
+            res.status(404).json({ message: 'cant get student profile' })
+        }
+
+        res.status(200).json(viewStudent)
+
+    } catch (error) {
+        throw error
+    }
+});
 //student can search for each other
+const findStudent = asyncHandler(async (req, res) => {
+    try {
+        const { username, email } = req.body;
+
+        //check if student is registered
+        const student = await Student.findOne({ email })
+        if (!student) {
+            res.status(404).json({ messagea: 'no student' })
+        }
+
+        //search for student with username
+        const searchStudent = await Student.findOne({ username })
+        if (!searchStudent) {
+            res.status(404).json({ messagea: 'student page not found' })
+        }
+
+        res.status(200).json(searchStudent)
+
+    } catch (error) {
+        throw error
+    }
+});
+//Students chat with each other in the chatroom
+const studentChatRoom = asyncHandler(async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        //only registered students are allowed
+        const student = await Student.findOne({ email })
+        if (!student) {
+            res.status(403).json({ message: 'No access to non student' })
+        }
+
+        res.status(200).json({ message: 'access granted' })
+    } catch (error) {
+        throw error
+    }
+});
+
+
+
+
 module.exports = {
     getStudent,
     getStudentId,
@@ -451,5 +600,10 @@ module.exports = {
     changePassword,
     updateStudent,
     deleteStudent,
-    profilePic
+    profilePic,
+    messageTeacher,
+    messageStudent,
+    studentList,
+    findStudent,
+    studentChatRoom
 }

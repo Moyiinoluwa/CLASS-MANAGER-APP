@@ -2,7 +2,7 @@ const asyncHandler = require('express-async-handler');
 const Teachers = require('../Models/teacherModel');
 const students  = require('../Models/studentModel')
 const teachOtp = require('../Models/teacherOtpModel')
-const StudentScore = require('../Models/studentScore')
+const Assignment = require('../Models/assignmentModel')
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken')
 const { registerTeacherValidator,  teacherLoginValidator, verifyTeacherOtpValidator, 
@@ -424,7 +424,7 @@ const editScore = asyncHandler(async(req, res) => {
         }
 
         //update the student score
-         const updateScore = await StudentScore.findOne({ student })
+         const updateScore = await Assignment.findOne({ student })
          updateScore.student = theStudent.id
          updateScore.subject = subject
          updateScore.score = score
@@ -437,7 +437,7 @@ const editScore = asyncHandler(async(req, res) => {
     }
 });
 
-//Teacher sends a message to all students
+//Teacher sends mail to all students
 const sendMessageToAll = asyncHandler(async(req, res) => {
     try {
 
@@ -446,7 +446,7 @@ const sendMessageToAll = asyncHandler(async(req, res) => {
             res.status(404).json({ message: 'student not in class' })
         }
 
-        //send message to students email
+        //send email to student
         await teacherSendMailToStudents(student.email)
 
         res.status(200).json({ message: 'Email sent to all students' })
@@ -455,7 +455,7 @@ const sendMessageToAll = asyncHandler(async(req, res) => {
     }
 });
 
-//Teacher sends message to a student
+//Teacher sends email to a student
 const sendMessageToOne = asyncHandler(async(req, res) => {
     try {
         const { id } = req.params;
@@ -501,7 +501,9 @@ const postAssignment = asyncHandler(async(req, res) => {
 
 //Teacher receives students message in the inbox
 
+//Teacher can send message to each other
 
+//Teacher sends message to students inbox
 
 
 module.exports = {
