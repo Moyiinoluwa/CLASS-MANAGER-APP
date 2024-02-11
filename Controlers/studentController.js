@@ -53,8 +53,8 @@ const registerStudent = asyncHandler(async (req, res) => {
         const { surname, name, username, email, password } = req.body;
 
         //check if student already exists
-        const user = await Student.findOne({ email })
-        if (user) {
+        const student = await Student.findOne({ email })
+        if (student) {
             res.status(403).json({ message: 'Student already exists' })
         }
 
@@ -77,15 +77,15 @@ const registerStudent = asyncHandler(async (req, res) => {
         const verifyCode = generateOtp()
         await verificationMail(email, verifyCode, username)
 
-        //set expiration time 
+        //set expiration time for the verification code
         const expirationTime = new Date()
         expirationTime.setMinutes(expirationTime.getMinutes() + 5)
 
         //save otp to database
         const studentOtp = new Otp()
         studentOtp.otp = verifyCode
-        studentOtp.email = newStudent.email,
-            studentOtp.expirationTime = expirationTime
+        studentOtp.email = newStudent.email
+        studentOtp.expirationTime = expirationTime
 
         await studentOtp.save()
 
@@ -108,18 +108,18 @@ const loginStudent = asyncHandler(async (req, res) => {
         //check if student has been registered 
         const { email, password } = req.body
 
-        const user = await Student.findOne({ email })
-        if (!user) {
+        const student = await Student.findOne({ email })
+        if (!student) {
             res.status(404).json({ message: 'Student has not been registered' })
         }
 
         //compare the password and grant access
-        if (user && await bcrypt.compare(password, user.password)) {
+        if (student && await bcrypt.compare(password, student.password)) {
             const accessToken = jwt.sign({
-                user: {
-                    username: user.username,
-                    email: user.email,
-                    id: user.id
+                student: {
+                    username: student.username,
+                    email: student.email,
+                    id: student.id
                 }
             }, process.env.ACCESS_KEY,
                 { expiresIn: '1yr' }
@@ -146,8 +146,8 @@ const verifyOtp = asyncHandler(async (req, res) => {
         //check if the email match the email the otp was sent to
         const { email, otp } = req.body;
 
-        const user = await Otp.findOne({ email })
-        if (!user) {
+        const student = await Otp.findOne({ email })
+        if (!student) {
             res.status(404).json({ message: 'the email you entered does not match the email the otp was sent to' })
         }
 
@@ -212,19 +212,19 @@ const resendOtp = asyncHandler(async (req, res) => {
         const expirationTime = new Date()
         expirationTime.setMinutes(expirationTime.getMinutes() + 5)
 
-        // check if the previous OTP has expired
-        const previousOtp = await Otp.findOne({ email: student.email }).sort({ createdAt: -1 })
+        // // check if the previous OTP has expired
+        // const previousOtp = await Otp.findOne({ email: student.email }).sort({ createdAt: -1 })
 
-        if (previousOtp && previousOtp.expirationTime <= new Date()) {
-            res.status(401).json({ message: 'Previous OTP has expired, please request for a new one' })
-            return;
-        }
+        // if (previousOtp && previousOtp.expirationTime <= new Date()) {
+        //     res.status(401).json({ message: 'Previous OTP has expired, please request for a new one' })
+        //     return;
+        // }
 
         // save new otp to database
         const otpNew = new Otp({
             otp: newOtp,
             email: student.email,
-            expirationTime
+            expirationTime: expirationTime
         });
 
         await otpNew.save()
@@ -424,11 +424,14 @@ const profilePic = asyncHandler(async (req, res) => {
 //sumbit student assignment just once
 const sumbitAssignment = asyncHandler(async (req, res) => {
     try {
+
+
         const student = await Student.findOne({ email })
         //check if student exists
         if (!student) {
             res.status(404).json({ message: 'not student' })
         }
+
 
 
     } catch (error) {
@@ -440,7 +443,7 @@ const sumbitAssignment = asyncHandler(async (req, res) => {
 // Students can see the marks they got
 const studentScore = asyncHandler(async (req, res) => {
     try {
-        const { student_id, email } = req.body;
+        const { student_id, email, subject } = req.body;
 
         //check if student is registered
         const student = await Student.findOne({ email })
@@ -451,7 +454,9 @@ const studentScore = asyncHandler(async (req, res) => {
         //student view score on profile
         const stuudent = await Assignment.findOne({ student_id })
         stuudent.score = student.score
-        stuudent.subject = 
+        stuudent.subject = subject
+
+        res.status(200).json({ message: 'score viewed' })
 
     } catch (error) {
         throw error
@@ -479,11 +484,10 @@ const messageTeacher = asyncHandler(async (req, res) => {
         }
 
         //create a new message and send to the teacher
-        const text = new Message({
-            teacher_id: teacher._id,
-            student_id: student._id,
-            message: message
-        })
+        const text = new Message()
+        text.sender = student
+        text.receiver = teacher
+        text.content = message
 
         //save to database
         await text.save()
@@ -511,20 +515,22 @@ const messageStudent = asyncHandler(async (req, res) => {
         }
 
         //student sends message to each other
-        const newText = new Message({
-            student_id: student._id,
-            message: message
-        })
+        const newText = new Message()
+        newText.sender = student
+        newText.receiver = aStudent
+        newText.content = message
 
         //save to database
         await newText.save()
+
+        res.status(200).json({ message: 'student message sent' })
 
     } catch (error) {
         throw error
     }
 });
 //Student can see list of students and view their profile
-const studentList = asyncHandler(async (req, res) => {
+const viewStudentProfile = asyncHandler(async (req, res) => {
     try {
 
         //find all the students
@@ -545,8 +551,10 @@ const studentList = asyncHandler(async (req, res) => {
         throw error
     }
 });
+
+
 //student can search for each other
-const findStudent = asyncHandler(async (req, res) => {
+const studentSearch = asyncHandler(async (req, res) => {
     try {
         const { username, email } = req.body;
 
@@ -601,9 +609,10 @@ module.exports = {
     updateStudent,
     deleteStudent,
     profilePic,
+    studentScore,
     messageTeacher,
     messageStudent,
-    studentList,
-    findStudent,
+    viewStudentProfile,
+    studentSearch,
     studentChatRoom
 }

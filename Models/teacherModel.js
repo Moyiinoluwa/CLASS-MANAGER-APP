@@ -1,7 +1,23 @@
 const mongoose = require('mongoose')
 
 const teacherSchema = mongoose.Schema({
+    surname: {
+        type: String,
+        required: true
+    },
+    
+    name: {
+        type: String,
+        required: true
+    },
+    
     username: {
+        type: String,
+        unique: [true, 'username has been taken'],
+        required: true
+    },
+
+    qualification: {
         type: String,
         required: true
     },
@@ -13,6 +29,11 @@ const teacherSchema = mongoose.Schema({
     },
 
     password: {
+        type: String,
+        required: true
+    },
+
+    subject: {
         type: String,
         required: true
     },

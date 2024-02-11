@@ -3,10 +3,22 @@ const mongoose = require('mongoose')
 const studentSchema = mongoose.Schema({
     username: {
         type: String,
+        unique: [true, 'username has been taken'],
         required: true
     },
 
     email: {
+        type: String,
+        unique: [true, 'email already exists'],
+        required: true
+    },
+
+    surname: {
+        type: String,
+        required: true
+    },
+
+    name: {
         type: String,
         required: true
     },

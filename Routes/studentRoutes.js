@@ -39,6 +39,9 @@ router.delete('/delete/:id', Controller.deleteStudent )
 //upload profile picture
 router.post('/upload/:id', upload, Controller.profilePic)
 
+//student can view their score
+router.get('/view-score', Controller.studentScore)
+
 //send message to teacher
 router.post('/message-teacher',  Controller.messageTeacher)
 
@@ -46,10 +49,10 @@ router.post('/message-teacher',  Controller.messageTeacher)
 router.post('/message-student', Controller.messageStudent)
 
 //view student profile
-router.get('/view-profile', Controller.studentList)
+router.get('/view-profile', Controller.viewStudentProfile)
 
 //search for a student
-router.get('/student-page', Controller.findStudent)
+router.get('/student-page', Controller.studentSearch)
 
 //chatroom
 router.post('/chatroom', Controller.studentChatRoom)

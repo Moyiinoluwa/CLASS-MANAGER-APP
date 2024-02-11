@@ -1,15 +1,16 @@
 const asyncHandler = require('express-async-handler');
 const Teachers = require('../Models/teacherModel');
-const students  = require('../Models/studentModel')
+const students = require('../Models/studentModel')
 const teachOtp = require('../Models/teacherOtpModel')
 const Assignment = require('../Models/assignmentModel')
+const Message = require('../Models/messageModel')
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken')
-const { registerTeacherValidator,  teacherLoginValidator, verifyTeacherOtpValidator, 
-    resendTeacherOtp, resetTeacherPasswordLinkValidator, teacherPasswordlLinkValidator, 
-    changePasswordValidator} = require('../Validator/teacherValidatorSchema');
+const { registerTeacherValidator, teacherLoginValidator, verifyTeacherOtpValidator,
+    resendTeacherOtp, resetTeacherPasswordLinkValidator, teacherPasswordlLinkValidator,
+    changePasswordValidator } = require('../Validator/teacherValidatorSchema');
 const { verificationMail, verifyOtpMail,
-     passwordResetLinkMail, teacherSendMailToStudents, teacherSendMailToAStudent } = require('../Shared/mailer');
+    passwordResetLinkMail, teacherSendMailToStudents, teacherSendMailToAStudent } = require('../Shared/mailer');
 
 
 
@@ -101,124 +102,124 @@ const register_Teacher = asyncHandler(async (req, res) => {
 });
 
 //login teacher
-const login_Teacher  = asyncHandler(async(req, res) => {
-try {
-    //validate the teacher input
-    const { error, value } = await teacherLoginValidator(req.body, { abortEarly: false })
-    if(error) {
-        res.status(400).json(error.message)
-    }
-    
-    const { email, password } = req.body;
+const login_Teacher = asyncHandler(async (req, res) => {
+    try {
+        //validate the teacher input
+        const { error, value } = await teacherLoginValidator(req.body, { abortEarly: false })
+        if (error) {
+            res.status(400).json(error.message)
+        }
 
-    //check if teacher has been registered
-    const teacher = await Teachers.findOne({ email })
-    if(!teacher) {
-        res.status(404).json({ message: 'Teacher is not registered' })
-    }
+        const { email, password } = req.body;
 
-    //if teacher is registered, compare the password and grant access
-    if(teacher && await bcrypt.compare(password, teacher.password)) {
-        const accessToken = jwt.sign({
-            teach: {
-                username: teacher.username,
-                email: teacher.email,
-                id: teacher.id
-            }
-        }, process.env.ACCESS_KEY,
-             { expiresIn: '1yr'}
-        )
-        res.status(200).json(accessToken)
-    } else {
-        res.status(400).json({ message: 'Incorrect email or password' })
+        //check if teacher has been registered
+        const teacher = await Teachers.findOne({ email })
+        if (!teacher) {
+            res.status(404).json({ message: 'Teacher is not registered' })
+        }
+
+        //if teacher is registered, compare the password and grant access
+        if (teacher && await bcrypt.compare(password, teacher.password)) {
+            const accessToken = jwt.sign({
+                teach: {
+                    username: teacher.username,
+                    email: teacher.email,
+                    id: teacher.id
+                }
+            }, process.env.ACCESS_KEY,
+                { expiresIn: '1yr' }
+            )
+            res.status(200).json(accessToken)
+        } else {
+            res.status(400).json({ message: 'Incorrect email or password' })
+        }
+    } catch (error) {
+        throw error
     }
-} catch (error) {
-    throw error
-}
 });
 
 //verify Otp
-const verify_Otp = asyncHandler(async(req, res) => {
-try {
-    const { error, value } = await verifyTeacherOtpValidator(req.body, { abortEarly: false }) 
-    if(error) {
-        res.status(400).json(error.message)
+const verify_Otp = asyncHandler(async (req, res) => {
+    try {
+        const { error, value } = await verifyTeacherOtpValidator(req.body, { abortEarly: false })
+        if (error) {
+            res.status(400).json(error.message)
+        }
+
+        const { email, otp } = req.body;
+        //check if the teacher is registered
+        const teacher = await Teachers.findOne({ email })
+        if (!teacher) {
+            res.status(404).json({ message: 'Teacher does not have access' })
+        }
+
+        //check if the otp is correct
+        const teacherOtp = await teachOtp.findOne({ otp })
+        if (!teacherOtp) {
+            res.status(404).json({ message: 'Otp is not correct' })
+        }
+
+        // Check if the otp has expired
+        if (teacherOtp.expirationTime <= new Date()) {
+            res.status(403).json({ message: 'Otp has expired, try again' })
+        }
+
+        //find the teacher associated with the email the otp was sent to
+        const teacherEmail = await Teachers.findOne({ email })
+        if (!teacherEmail) {
+            res.status(404).json({ message: 'This is not the email the otp was sent to' })
+        }
+
+        //verify teacher otp
+        teacherOtp.isVerified = true
+
+        //send verification mail to the teacher
+        await verifyOtpMail(teacher.username)
+
+        res.status(200).json({ message: 'Otp verified' })
+    } catch (error) {
+        throw error
     }
-
-    const { email, otp } = req.body;
-    //check if the teacher is registered
-    const teacher = await Teachers.findOne({ email })
-    if(!teacher) {
-        res.status(404).json({ message: 'Teacher does not have access'})
-    }
-
-    //check if the otp is correct
-    const teacherOtp = await teachOtp.findOne({ otp })
-    if(!teacherOtp) {
-        res.status(404).json({ message: 'Otp is not correct'})
-    }
-
-    // Check if the otp has expired
-    if(teacherOtp.expirationTime <= new Date()) {
-        res.status(403).json({ message: 'Otp has expired, try again'})
-    }
-
-    //find the teacher associated with the email the otp was sent to
-    const teacherEmail = await Teachers.findOne({ email })
-    if(!teacherEmail) {
-        res.status(404).json({ message: 'This is not the email the otp was sent to'})
-    }
-
-    //verify teacher otp
-    teacherOtp.isVerified = true
-
-    //send verification mail to the teacher
-    await verifyOtpMail(teacher.username)
-
-    res.status(200).json({ message: 'Otp verified'})
-} catch (error) {
-    throw error
-}
 });
 
 
 //resend otp
-const resend_Otp = asyncHandler(async(req, res) => {
+const resend_Otp = asyncHandler(async (req, res) => {
     try {
-       // valaidate teacher input
+        // valaidate teacher input
         const { error, value } = await resendTeacherOtp(req.body, { abortEarly: false })
-       if(error) {
-        res.status(400).json(error.message)
-       }
+        if (error) {
+            res.status(400).json(error.message)
+        }
 
-       const { email } = req.body;
+        const { email } = req.body;
 
-       //Check if the email is registered 
-       const teacher = await Teachers.findOne({ email })
-       if(!teacher) {
-        res.status(404).json({ message: 'This user is not registered'})
-       }
+        //Check if the email is registered 
+        const teacher = await Teachers.findOne({ email })
+        if (!teacher) {
+            res.status(404).json({ message: 'This user is not registered' })
+        }
 
-       //generate a new otp
-       const newCode = verifyCode()
+        //generate a new otp
+        const newCode = verifyCode()
 
-       //send a new verification email to the user
-       await verificationMail(newCode, teacher.username)
+        //send a new verification email to the user
+        await verificationMail(newCode, teacher.username)
 
-       //set exipration time
-       const lateComer = new Date()
-       lateComer.setMinutes(lateComer.getMinutes() + 5)
+        //set exipration time
+        const lateComer = new Date()
+        lateComer.setMinutes(lateComer.getMinutes() + 5)
 
-       //save the new otp to the otp table
-       const otpNew = new teachOtp()
-       otpNew.otp = newCode
-       otpNew.email = teacher.email
-       otpNew.expirationTime = lateComer
+        //save the new otp to the otp table
+        const otpNew = new teachOtp()
+        otpNew.otp = newCode
+        otpNew.email = teacher.email
+        otpNew.expirationTime = lateComer
 
-       //save to database
-       await otpNew.save()
+        //save to database
+        await otpNew.save()
 
-       res.status(200).json({ message: 'New otp sent' })
+        res.status(200).json({ message: 'New otp sent' })
 
     } catch (error) {
         throw error
@@ -226,11 +227,11 @@ const resend_Otp = asyncHandler(async(req, res) => {
 });
 
 //reset password link
-const resetTeacherPasswordLink = asyncHandler(async(req, res) => {
+const resetTeacherPasswordLink = asyncHandler(async (req, res) => {
     try {
         //valiadate input
         const { error, value } = await resetTeacherPasswordLinkValidator(req.body, { abortEarly: false })
-        if(error) {
+        if (error) {
             res.status(400).json(error.message)
         }
 
@@ -238,8 +239,8 @@ const resetTeacherPasswordLink = asyncHandler(async(req, res) => {
 
         // check if user is registered
         const teacher = await Teachers.findOne({ email })
-        if(!teacher) {
-            res.status(404).json({ message: 'User not registered'})
+        if (!teacher) {
+            res.status(404).json({ message: 'User not registered' })
         }
 
         //generate password link
@@ -255,7 +256,7 @@ const resetTeacherPasswordLink = asyncHandler(async(req, res) => {
         //send it to the teacher 
         await passwordResetLinkMail(email, setPassword, teacher.username)
 
-        res.status(200).json({ message: 'password reset link sent'})
+        res.status(200).json({ message: 'password reset link sent' })
 
     } catch (error) {
         throw error
@@ -263,10 +264,10 @@ const resetTeacherPasswordLink = asyncHandler(async(req, res) => {
 });
 
 // reset password
-const reset_Password = asyncHandler(async(req, res) => {
+const reset_Password = asyncHandler(async (req, res) => {
     try {
         const { error, value } = await teacherPasswordlLinkValidator(req.body, { abortEarly: false })
-        if(error) {
+        if (error) {
             res.status(400).json(error.message)
         }
 
@@ -274,11 +275,11 @@ const reset_Password = asyncHandler(async(req, res) => {
 
         //if teacher is regsistered 
         const teacher = await Teachers.findOne({ email })
-        if(!teacher) {
-            res.status(404).json({ message: 'not found'})
+        if (!teacher) {
+            res.status(404).json({ message: 'not found' })
         }
 
-         //Check if the reset link matches
+        //Check if the reset link matches
         if (teacher.resetLink !== resetLink) {
             res.status(400).json({ message: 'Invalid reset link' })
         }
@@ -305,36 +306,36 @@ const reset_Password = asyncHandler(async(req, res) => {
 });
 
 //change password
-const change_Password = asyncHandler(async(req, res) => {
+const change_Password = asyncHandler(async (req, res) => {
     try {
         //validate the input
         const { error, value } = await changePasswordValidator(req.body, { abortEarly: false })
-        if(error) {
+        if (error) {
             res.status(400).json(error.message)
         }
 
         const { email, oldPassword, newPassword } = req.body
-        
+
         //check if the user is registered
         const teacher = await Teachers.findOne({ email })
         if (!teacher) {
-            res.status(404).json({ message: 'teacher not registered'})
+            res.status(404).json({ message: 'teacher not registered' })
         }
 
         //compare the existing password with the one teacher entered
         if (oldPassword && await bcrypt.compare(oldPassword, teacher.password)) {
 
             //hash new password
-        const hashPassword = await bcrypt.hash(newPassword, 10)
+            const hashPassword = await bcrypt.hash(newPassword, 10)
 
             //save new password to database
-        teacher.newPassword = hashPassword,
-        
-        await teacher.save()
+            teacher.newPassword = hashPassword,
 
-            res.status(200).json({ message: 'password changed'})
+                await teacher.save()
+
+            res.status(200).json({ message: 'password changed' })
         } else {
-            res.status(400).json({ message: 'incorrect password'})
+            res.status(400).json({ message: 'incorrect password' })
         }
     } catch (error) {
         throw error
@@ -347,18 +348,18 @@ const update_Teacher = asyncHandler(async (req, res) => {
         const { username } = req.body
 
         //check if teacher is registered
-    const teacher = await Teachers.findById(req.params.id)
-    if(!teacher) {
-        res.status(400).json({ message: 'teacher not found' })
-    }
+        const teacher = await Teachers.findById(req.params.id)
+        if (!teacher) {
+            res.status(400).json({ message: 'teacher not found' })
+        }
 
-     //update new value
-    teacher.username = username
+        //update new value
+        teacher.username = username
 
-    //save new update to database
-    await teacher.save()
+        //save new update to database
+        await teacher.save()
 
-    res.status(200).json({ message: 'Teacher updated successfully', teacher })
+        res.status(200).json({ message: 'Teacher updated successfully', teacher })
 
     } catch (error) {
         throw error
@@ -369,28 +370,28 @@ const update_Teacher = asyncHandler(async (req, res) => {
 const delete_Teacher = asyncHandler(async (req, res) => {
     try {
         //check if teacher is registered
-        const teacher = await  Teachers.findById(req.params.id)
-        if(!teacher) {
-            res.status(404).json({ message: 'teacher id not found'})
+        const teacher = await Teachers.findById(req.params.id)
+        if (!teacher) {
+            res.status(404).json({ message: 'teacher id not found' })
         }
 
         const removeTeacher = await Teachers.deleteOne({ _id: req.params.id })
-        res.status(200).json({ message: 'Teacher deleted'})
-        
+        res.status(200).json({ message: 'Teacher deleted' })
+
     } catch (error) {
         throw error
     }
 });
 
 // upload profile picture
-const uploadPics = asyncHandler(async(req, res) => {
+const uploadPics = asyncHandler(async (req, res) => {
     try {
         const { id } = req.params
 
         //check if teacher is registered
         const teacher = await Teachers.findById(id)
-        if(!teacher)
-         res.status(404).json({ message: 'teacher not on the list'})
+        if (!teacher)
+            res.status(404).json({ message: 'teacher not on the list' })
 
 
         const picture = req.file.filename
@@ -399,7 +400,7 @@ const uploadPics = asyncHandler(async(req, res) => {
         //save to database
         await teacher.save()
 
-        res.status(200).json({ message: 'picture uploaded'})
+        res.status(200).json({ message: 'picture uploaded' })
     } catch (error) {
         throw error
     }
@@ -407,30 +408,30 @@ const uploadPics = asyncHandler(async(req, res) => {
 
 
 // Edit student's score
-const editScore = asyncHandler(async(req, res) => {
+const editScore = asyncHandler(async (req, res) => {
     try {
-        const { email, score, subject , id} = req.body
+        const { email, score, subject, id } = req.body
 
         //check if teacher is registered
-        const teacher = await Teachers.findOne({ email }) 
-        if(!teacher) {
-            res.status(404).json({ message: 'teacher cant access'})
+        const teacher = await Teachers.findOne({ email })
+        if (!teacher) {
+            res.status(404).json({ message: 'teacher cant access' })
         }
 
         //if the student is registered
         const theStudent = await students.findById({ id })
-        if(!theStudent) {
-            res.status(404).json({ message: 'non student'})
+        if (!theStudent) {
+            res.status(404).json({ message: 'non student' })
         }
 
         //update the student score
-         const updateScore = await Assignment.findOne({ student })
-         updateScore.student = theStudent.id
-         updateScore.subject = subject
-         updateScore.score = score
+        const updateScore = await Assignment.findOne({ student })
+        updateScore.student = theStudent.id
+        updateScore.subject = subject
+        updateScore.score = score
 
-         //save to database 
-         await updateScore.save()
+        //save to database 
+        await updateScore.save()
 
     } catch (error) {
         throw error
@@ -438,11 +439,11 @@ const editScore = asyncHandler(async(req, res) => {
 });
 
 //Teacher sends mail to all students
-const sendMessageToAll = asyncHandler(async(req, res) => {
+const sendMessageToAll = asyncHandler(async (req, res) => {
     try {
 
         const student = await students.find()
-        if(!student) {
+        if (!student) {
             res.status(404).json({ message: 'student not in class' })
         }
 
@@ -456,34 +457,34 @@ const sendMessageToAll = asyncHandler(async(req, res) => {
 });
 
 //Teacher sends email to a student
-const sendMessageToOne = asyncHandler(async(req, res) => {
+const sendMessageToOne = asyncHandler(async (req, res) => {
     try {
         const { id } = req.params;
 
         //if student is registered
         const student = await students.findById({ id })
-        if(!student) {
-            res.status(404).json({ message: 'wrong student'})
+        if (!student) {
+            res.status(404).json({ message: 'wrong student' })
         }
 
         //send message to the student via mail
         await teacherSendMailToAStudent(student.email)
 
-        res.status(200).json({ message: 'Email sent to the student'})
+        res.status(200).json({ message: 'Email sent to the student' })
     } catch (error) {
         throw error
     }
 });
 
 //Teacher uploads assignment
-const postAssignment = asyncHandler(async(req, res) => {
+const postAssignment = asyncHandler(async (req, res) => {
     try {
-        const  { id } = req.params
+        const { id } = req.params
 
         //check if teacher is regsitered
         const teacher = await Teachers.findOne({ email })
-        if(!teacher) {
-            res.status(404).json({ message:'teacher cant upload'})
+        if (!teacher) {
+            res.status(404).json({ message: 'teacher cant upload' })
         }
 
         const assign = req.file.filename
@@ -491,19 +492,144 @@ const postAssignment = asyncHandler(async(req, res) => {
 
         await teacher.save()
 
-        res.status(200).json({ message: 'assignment uploaded'})
+        res.status(200).json({ message: 'assignment uploaded' })
     } catch (error) {
         throw error
     }
 });
 
 //Teacher uploads each students score
+const uploadStudentScore = asyncHandler(async (req, res) => {
+    try {
+        const { email, student_id, score } = req.body;
+
+        //if teacher is registered
+        const teacher = await Teachers.findOne({ email })
+        if (!teacher) {
+            res.status(404).json({ message: 'no teacher' })
+        }
+
+        //find student by id
+        const student = await students.findById(req.params.id)
+        if (!student) {
+            res.status(404).json({ message: 'no student' })
+        }
+
+        //upload each student score
+        const studentMark = new Assignment()
+        student.score = score
+        student.id = student_id
+
+        //save to database
+        await studentMark.save()
+
+        res.status(200).json({ message: 'Student score uploaded' })
+
+    } catch (error) {
+        throw error
+    }
+});
 
 //Teacher receives students message in the inbox
+const inboxMessage = asyncHandler(async (req, res) => {
+    try {
+        const { email, id, message } = req.body
+
+        //if student is registered
+        const student = await students.findOne({ email })
+        if (!student) {
+            res.status(404).json({ message: 'wrong student info' })
+        }
+
+        //if teacher is registered
+        const teacher = await Teachers.findOne({ _id: id })
+        if (!teacher) {
+            res.status(404).json({ message: 'no teacher' })
+        }
+
+        //create new message
+        const sendMessage = new Message()
+        sendMessage.sender = student
+        sendMessage.receiver = teacher
+        sendMessage.content = message
+
+        //save to database
+        await sendMessage.save()
+
+        res.status(200).json({ message: 'message received' })
+
+    } catch (error) {
+        throw error
+    }
+});
 
 //Teacher can send message to each other
+const replyTeacher = asyncHandler(async (req, res) => {
+    try {
+
+        const { email, username, message } = req.body;
+
+        //if teacher is regsitered
+        const senderTeacher = await Teachers.findOne({ email })
+        if (!senderTeacher) {
+            res.status(404).json({ message: 'teacher missing' })
+        }
+
+        //check if the other teacher is regsitered
+        const receiverTeacher = await Teachers.findOne({ username })
+        if (!receiverTeacher) {
+            res.status(404).json({ message: 'teacher cannot receive message' })
+        }
+
+        //send message
+        const replyMessage = new Message()
+        replyMessage.sender = senderTeacher.id
+        replyMessage.receiver = receiverTeacher.id
+        replyMessage.content = message
+
+        //save to database
+        await replyMessage.save()
+
+        res.status(200).json({ message: 'amebo succesful' })
+
+    } catch (error) {
+        throw error
+    }
+});
 
 //Teacher sends message to students inbox
+const messageStudent = asyncHandler(async (req, res) => {
+    try {
+
+        const { email, message } = req.body;
+
+        //check if teacher is registered 
+        const teacher = await Teachers.findOne({ email })
+        if (!teacher) {
+            res.status(404).json({ message: 'teacher cant message student' })
+        }
+
+        //search for student 
+        const student = await students.findById(req.params.id)
+        if (!student) {
+            res.status(404).json({ message: 'cant find student' })
+        }
+
+        //teacher sends a message to students
+        const theMessage = new Message()
+        theMessage.sender = teacher
+        theMessage.receiver = student
+        theMessage.content = message
+
+        //save to database
+        await theMessage.save()
+
+        res.status(200).json({ message: 'message sent to student' })
+    } catch (error) {
+        this
+    }
+})
+
 
 
 module.exports = {
@@ -522,5 +648,9 @@ module.exports = {
     editScore,
     sendMessageToAll,
     sendMessageToOne,
-    postAssignment
+    postAssignment,
+    uploadStudentScore,
+    inboxMessage,
+    replyTeacher,
+    messageStudent
 }
