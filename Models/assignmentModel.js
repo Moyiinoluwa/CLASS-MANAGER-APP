@@ -6,7 +6,7 @@ const assignmentSchema = mongoose.Schema({
         required: true
     },
 
-    class: {
+    klass: {
         type: String,
         required: true
     },
@@ -16,17 +16,23 @@ const assignmentSchema = mongoose.Schema({
         default: ''
     },
 
+    editScore: {
+        type: String,
+        default: ''
+    },
+
     student_id: {
         type: String,
         required: true
     },
     
-    date: {
-        type: Date,
-        required: true
-    }
+    homework: {
+        type: String,
+        default: ''
+    },
+
 }, {
-    timestamp: true
+    timestamps: true
 });
 
 module.exports = mongoose.model('Assignment', assignmentSchema)

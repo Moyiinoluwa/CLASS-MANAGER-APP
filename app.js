@@ -1,6 +1,7 @@
 const express = require('express');
 const connectdb = require('./Config/connectdb');
 const errorHandler = require('./Middleware/errorHandler');
+const validate = require('./Middleware/validateToken');
 const dotenv = require('dotenv').config()
 
 const app = express();
@@ -17,6 +18,9 @@ app.use('/api/teachers', require('./Routes/teacherRoutes'))
 
 //error middleware
 errorHandler()
+
+//validate middleware
+validate()
 
 //listen on port 
 const PORT = process.env.PORT || 3002

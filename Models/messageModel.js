@@ -4,14 +4,12 @@ const mongoose = require('mongoose')
  const messageSchema = mongoose.Schema({
  
     sender: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Students',
+        type: String,
         required: true
     },
 
     receiver: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Teachers',
+        type: String,
         required: true
     },
 
@@ -28,7 +26,7 @@ const mongoose = require('mongoose')
      
     content: {
         type: String,
-        required: true
+        default: ' '
     }
     
 }, {

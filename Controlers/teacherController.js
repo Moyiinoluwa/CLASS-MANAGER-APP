@@ -11,6 +11,7 @@ const { registerTeacherValidator, teacherLoginValidator, verifyTeacherOtpValidat
     changePasswordValidator } = require('../Validator/teacherValidatorSchema');
 const { verificationMail, verifyOtpMail,
     passwordResetLinkMail, teacherSendMailToStudents, teacherSendMailToAStudent } = require('../Shared/mailer');
+const { date } = require('joi');
 
 
 
@@ -94,7 +95,7 @@ const register_Teacher = asyncHandler(async (req, res) => {
 
         await otpT.save()
 
-        res.status(200).json({ message: 'teacher registered' })
+        res.status(200).json(newTeacher)
 
     } catch (error) {
         throw error
@@ -110,10 +111,10 @@ const login_Teacher = asyncHandler(async (req, res) => {
             res.status(400).json(error.message)
         }
 
-        const { email, password } = req.body;
+        const { id, password } = req.body;
 
         //check if teacher has been registered
-        const teacher = await Teachers.findOne({ email })
+        const teacher = await Teachers.findOne(id)
         if (!teacher) {
             res.status(404).json({ message: 'Teacher is not registered' })
         }
@@ -345,6 +346,11 @@ const change_Password = asyncHandler(async (req, res) => {
 //Update teacher information
 const update_Teacher = asyncHandler(async (req, res) => {
     try {
+        const { error, value } = await updateValidator(req.body, { abortEarly: false })
+        if(error) {
+            res.status(400).json(error.message)
+        }
+
         const { username } = req.body
 
         //check if teacher is registered
@@ -369,8 +375,16 @@ const update_Teacher = asyncHandler(async (req, res) => {
 //Delete teacher's account
 const delete_Teacher = asyncHandler(async (req, res) => {
     try {
+
+        const { error, value } = await deleteValidator(req.body, { abortEarly: false })
+        if(error) {
+            res.status(400).json(error.message)
+        }
+
+        const { id } = req.params
+
         //check if teacher is registered
-        const teacher = await Teachers.findById(req.params.id)
+        const teacher = await Teachers.findById(id)
         if (!teacher) {
             res.status(404).json({ message: 'teacher id not found' })
         }
@@ -383,9 +397,16 @@ const delete_Teacher = asyncHandler(async (req, res) => {
     }
 });
 
+
 // upload profile picture
 const uploadPics = asyncHandler(async (req, res) => {
     try {
+
+        const { error, value } = await uploadValidator(req.body, { abortEarly: false })
+        if(error) {
+            res.status(400).json(error.message)
+        }
+
         const { id } = req.params
 
         //check if teacher is registered
@@ -407,31 +428,103 @@ const uploadPics = asyncHandler(async (req, res) => {
 });
 
 
-// Edit student's score
-const editScore = asyncHandler(async (req, res) => {
+const sendAssignment = asyncHandler(async (req, res) => {
     try {
-        const { email, score, subject, id } = req.body
-
-        //check if teacher is registered
-        const teacher = await Teachers.findOne({ email })
-        if (!teacher) {
-            res.status(404).json({ message: 'teacher cant access' })
+        const { error, value } = await sendAssignmentValidator(req.body, { abortEarly: false })
+        if(error) {
+            res.status(400).json(error.message)
         }
 
+        const { id } = req.params
+
+        const teacher = await Teachers.findById(id)
+        if (!teacher) {
+            res.status(404).json({ message: 'not this teacher' })
+        }
+
+        const { klass, subject, homework } = req.body
+
+        //create new assignment
+        const assignment = new Assignment({
+            klass,
+            subject,
+            homework
+        })
+
+        await assignment.save()
+
+        res.status(200).json(assignment)
+
+    } catch (error) {
+        throw error
+    }
+});
+
+
+//Teacher uploads each students score
+const uploadStudentScore = asyncHandler(async (req, res) => {
+    try {
+        
+        const { error, value } = await uploadScoreValidator(req.body, { abortEarly: false }) 
+        if(error) {
+            res.status(400).json(error.message)
+        }
+
+        const { id } = req.params
+        
+         //find student by id
+        const student = await students.findById(id)
+        if (!student) {
+            res.status(404).json({ message: 'no student' })
+        }
+        
+        const { student_id, score, klass, subject, homework } = req.body;
+
+        //upload each student score
+        const studentMark = new Assignment({
+            klass,
+            student_id,
+            subject,
+            score,
+            homework
+        });
+
+        //save to database
+        await studentMark.save()
+
+        res.status(200).json({ message: 'Student score uploaded' })
+
+    } catch (error) {
+        throw error
+    }
+});
+
+
+// Edit student's score
+const editStudentScore = asyncHandler(async (req, res) => {
+    try {
+         
+        const { error, value } = await editScoreValidator(req.body, { abortEarly: false })
+        if(error) {
+            res.status(400).json(error.message)
+        }
+
+        const { id } = req.params
+
         //if the student is registered
-        const theStudent = await students.findById({ id })
-        if (!theStudent) {
+        const student = await students.findById(id)
+        if (student) {
             res.status(404).json({ message: 'non student' })
         }
 
-        //update the student score
-        const updateScore = await Assignment.findOne({ student })
-        updateScore.student = theStudent.id
-        updateScore.subject = subject
-        updateScore.score = score
+        //update score
+        const  { updateScore } = req.body
+         student.score = updateScore
 
         //save to database 
-        await updateScore.save()
+        await student.save()
+
+        res.status(200).json({ message: 'student score updated'})
 
     } catch (error) {
         throw error
@@ -439,30 +532,53 @@ const editScore = asyncHandler(async (req, res) => {
 });
 
 //Teacher sends mail to all students
-const sendMessageToAll = asyncHandler(async (req, res) => {
+const sendEmailToAll = asyncHandler(async (req, res) => {
     try {
 
-        const student = await students.find()
-        if (!student) {
-            res.status(404).json({ message: 'student not in class' })
+        const { error, value } = await sendEmailToAllValidator(req.body, { abortEarly: false })
+        if(error) {
+            res.status(400).json(error.message)
+        }
+        
+        const { email } = req.body
+
+        //get all the students from the student database
+        const studentList = await students.find()
+        if (!studentList || studentList.length === 0) {
+            res.status(404).json({ message: 'There are no students registered' })
         }
 
+        //create an array and push all the email to the array
+         const sendEmail  = []
+         studentList.forEach(student => {
+            sendEmail.push(student.email)
+         });
+
         //send email to student
-        await teacherSendMailToStudents(student.email)
+        await teacherSendMailToStudents(sendEmail)
 
         res.status(200).json({ message: 'Email sent to all students' })
+
     } catch (error) {
         throw error
     }
 });
 
 //Teacher sends email to a student
-const sendMessageToOne = asyncHandler(async (req, res) => {
+const sendEmailToOne = asyncHandler(async (req, res) => {
     try {
+
+        const {error, value } = await sendEmailToOneValidator(req.body, { abortEarly: false })
+        if(error) {
+            res.status(400).json(error.message)
+        }
+
         const { id } = req.params;
 
+        const { email } = req.body
+
         //if student is registered
-        const student = await students.findById({ id })
+        const student = await students.findById(id )
         if (!student) {
             res.status(404).json({ message: 'wrong student' })
         }
@@ -476,81 +592,35 @@ const sendMessageToOne = asyncHandler(async (req, res) => {
     }
 });
 
-//Teacher uploads assignment
-const postAssignment = asyncHandler(async (req, res) => {
-    try {
-        const { id } = req.params
-
-        //check if teacher is regsitered
-        const teacher = await Teachers.findOne({ email })
-        if (!teacher) {
-            res.status(404).json({ message: 'teacher cant upload' })
-        }
-
-        const assign = req.file.filename
-        teacher.assignment = assign
-
-        await teacher.save()
-
-        res.status(200).json({ message: 'assignment uploaded' })
-    } catch (error) {
-        throw error
-    }
-});
-
-//Teacher uploads each students score
-const uploadStudentScore = asyncHandler(async (req, res) => {
-    try {
-        const { email, student_id, score } = req.body;
-
-        //if teacher is registered
-        const teacher = await Teachers.findOne({ email })
-        if (!teacher) {
-            res.status(404).json({ message: 'no teacher' })
-        }
-
-        //find student by id
-        const student = await students.findById(req.params.id)
-        if (!student) {
-            res.status(404).json({ message: 'no student' })
-        }
-
-        //upload each student score
-        const studentMark = new Assignment()
-        student.score = score
-        student.id = student_id
-
-        //save to database
-        await studentMark.save()
-
-        res.status(200).json({ message: 'Student score uploaded' })
-
-    } catch (error) {
-        throw error
-    }
-});
 
 //Teacher receives students message in the inbox
 const inboxMessage = asyncHandler(async (req, res) => {
     try {
-        const { email, id, message } = req.body
+
+        const { error, value } = await inboxMessageValidator(req.body, { abortEarly: false }) 
+        if(error) {
+            res.status(400).json(error.message)
+        }
+
+        const { student_id, teacher_id } = req.params
+        const { message } = req.body
 
         //if student is registered
-        const student = await students.findOne({ email })
+        const student = await students.findById({ _id: student_id })
         if (!student) {
             res.status(404).json({ message: 'wrong student info' })
         }
 
         //if teacher is registered
-        const teacher = await Teachers.findOne({ _id: id })
+        const teacher = await Teachers.findById({ _id: teacher_id })
         if (!teacher) {
             res.status(404).json({ message: 'no teacher' })
         }
 
         //create new message
         const sendMessage = new Message()
-        sendMessage.sender = student
-        sendMessage.receiver = teacher
+        sendMessage.sender = student.name 
+        sendMessage.receiver = teacher.name 
         sendMessage.content = message
 
         //save to database
@@ -567,23 +637,18 @@ const inboxMessage = asyncHandler(async (req, res) => {
 const replyTeacher = asyncHandler(async (req, res) => {
     try {
 
-        const { email, username, message } = req.body;
-
-        //if teacher is regsitered
-        const senderTeacher = await Teachers.findOne({ email })
-        if (!senderTeacher) {
-            res.status(404).json({ message: 'teacher missing' })
-        }
+        const { id } = req.params
+        const { message } = req.body;
 
         //check if the other teacher is regsitered
-        const receiverTeacher = await Teachers.findOne({ username })
+        const receiverTeacher = await Teachers.findById(id)
         if (!receiverTeacher) {
             res.status(404).json({ message: 'teacher cannot receive message' })
         }
 
         //send message
         const replyMessage = new Message()
-        replyMessage.sender = senderTeacher.id
+        replyMessage.sender = senderTeacher
         replyMessage.receiver = receiverTeacher.id
         replyMessage.content = message
 
@@ -596,6 +661,7 @@ const replyTeacher = asyncHandler(async (req, res) => {
         throw error
     }
 });
+
 
 //Teacher sends message to students inbox
 const messageStudent = asyncHandler(async (req, res) => {
@@ -645,12 +711,12 @@ module.exports = {
     update_Teacher,
     delete_Teacher,
     uploadPics,
-    editScore,
-    sendMessageToAll,
-    sendMessageToOne,
-    postAssignment,
+    editStudentScore,
+    sendEmailToAll,
+    sendEmailToOne,
     uploadStudentScore,
     inboxMessage,
     replyTeacher,
-    messageStudent
+    messageStudent,
+    sendAssignment
 }

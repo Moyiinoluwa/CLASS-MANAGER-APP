@@ -50,6 +50,59 @@ const changePasswordValidator = joi.object({
   newPassword: joi.string().min(8).max(16).required()
 });
 
+//update teacher
+const updateValidator = joi.object({
+  id: joi.string().required()
+});
+
+//delete teacher
+const deleteValidator = joi.object({
+  id: joi.string().required()
+});
+
+//upload proile picture
+const uploadValidator = joi.object({
+  id: joi.string().required()
+});
+
+//teacher sends assignment 
+const sendAssignmentValidator = joi.object({
+  klass: joi.string().required(),
+  subject: joi.string().required(),
+  homework: joi.string().required()
+});
+
+//teacher upload student score
+const uploadScoreValidator = joi.object({
+  student_id: joi.string().required(),
+  klass: joi.string().required(),
+  subject: joi.string().required(),
+  score: joi.string().required(),
+  homework: joi.string().required()
+});
+
+//teacher edit student score
+const editScoreValidator = joi.object({
+  id: joi.string().required(),
+  score: joi.string().required()
+});
+
+//teacher sends email to all student
+const sendEmailToAllValidator = joi.object({ 
+  email: joi.string().email().required()
+});
+
+//teacher sends email to one student
+const sendEmailToOneValidator = joi.object({
+  email: joi.string().email().required()
+});
+
+//teacher sends student message
+const inboxMessageValidator = joi.object({
+  message: joi.string().required()
+});
+
+
  exports.registerTeacherValidator = validator(registerTeacherValidator)
  exports.teacherLoginValidator = validator(teacherLoginValidator)
  exports.verifyTeacherOtpValidator = validator(verifyTeacherOtpValidator)
@@ -57,3 +110,12 @@ const changePasswordValidator = joi.object({
  exports.resetTeacherPasswordLinkValidator = validator(resetTeacherPasswordLinkValidator)
  exports.teacherPasswordlLinkValidator = validator(teacherPasswordlLinkValidator)
  exports.changePasswordValidator = validator(changePasswordValidator)
+ exports.updateValidator = validator(updateValidator)
+ exports.deleteValidator = validator(deleteValidator)
+ exports.uploadValidator = validator(uploadValidator)
+ exports.sendAssignmentValidator = validator(sendAssignmentValidator)
+ exports.uploadScoreValidator = validator(uploadScoreValidator)
+ exports.editScoreValidator = validator(editScoreValidator)
+ exports.sendEmailToAllValidator = validator(sendEmailToAllValidator)
+ exports.sendEmailToOneValidator = validator(sendEmailToOneValidator)
+ exports.inboxMessageValidator = validator(inboxMessageValidator)

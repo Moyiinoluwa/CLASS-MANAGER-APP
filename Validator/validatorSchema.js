@@ -43,7 +43,9 @@ const setPasswordValidator = joi.object({
 
 //change password
 const changePasswordValidator = joi.object({
-    email: joi.string().email().required()
+    email: joi.string().email().required(),
+    newPassword: joi.string().min(8).max(16).required(),
+    oldPassword: joi.string().min(8).max(16).required()
 });
 
 

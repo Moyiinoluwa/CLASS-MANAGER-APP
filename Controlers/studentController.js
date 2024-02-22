@@ -425,6 +425,7 @@ const profilePic = asyncHandler(async (req, res) => {
 const sumbitAssignment = asyncHandler(async (req, res) => {
     try {
 
+        const { student_id, klass, } = req.body
 
         const student = await Student.findOne({ email })
         //check if student exists
