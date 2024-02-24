@@ -3,6 +3,7 @@
 
  const validate = asyncHandler(async (req, res, next) => {
     let token;
+    console.log(req)
     let authHeader = req.headers.Authorization || req.headers.authorization;
     if(authHeader && authHeader.startsWith('Bearer')) {
         token = authHeader.split(' ')[1]

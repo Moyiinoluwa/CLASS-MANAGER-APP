@@ -102,6 +102,11 @@ const inboxMessageValidator = joi.object({
   message: joi.string().required()
 });
 
+//teacher sends message to another teacher
+const replyTeacherValidator = joi.object({
+  message: joi.string().required()
+});
+
 
  exports.registerTeacherValidator = validator(registerTeacherValidator)
  exports.teacherLoginValidator = validator(teacherLoginValidator)
@@ -119,3 +124,4 @@ const inboxMessageValidator = joi.object({
  exports.sendEmailToAllValidator = validator(sendEmailToAllValidator)
  exports.sendEmailToOneValidator = validator(sendEmailToOneValidator)
  exports.inboxMessageValidator = validator(inboxMessageValidator)
+ exports.replyTeacherValidator = validator(replyTeacherValidator)

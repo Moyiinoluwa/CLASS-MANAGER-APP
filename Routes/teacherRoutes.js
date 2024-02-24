@@ -60,7 +60,7 @@ router.post('/send-message/:student_id/:teacher_id', validate, Controller.inboxM
 router.post('/reply-teacher', validate, Controller.replyTeacher)
 
 //teacher message student
-router.post('/message-student', validate, Controller.messageStudent)
+//router.post('/message-student', validate, Controller.messageStudent)
 
 //teacher sends assignment
 router.post('/send-assignment/:id', validate, Controller.sendAssignment)

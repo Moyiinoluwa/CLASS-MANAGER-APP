@@ -8,10 +8,12 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken')
 const { registerTeacherValidator, teacherLoginValidator, verifyTeacherOtpValidator,
     resendTeacherOtp, resetTeacherPasswordLinkValidator, teacherPasswordlLinkValidator,
-    changePasswordValidator } = require('../Validator/teacherValidatorSchema');
-const { verificationMail, verifyOtpMail,
-    passwordResetLinkMail, teacherSendMailToStudents, teacherSendMailToAStudent } = require('../Shared/mailer');
-const { date } = require('joi');
+    changePasswordValidator, uploadScoreValidator, sendEmailToAllValidator, 
+    sendEmailToOneValidator,replyTeacherValidator, sendAssignmentValidator, 
+    editScoreValidator, inboxMessageValidator} = require('../Validator/teacherValidatorSchema');
+const { verificationMail, verifyOtpMail, passwordResetLinkMail, 
+    teacherSendMailToStudents, teacherSendMailToAStudent } = require('../Shared/mailer');
+
 
 
 
@@ -351,10 +353,10 @@ const update_Teacher = asyncHandler(async (req, res) => {
             res.status(400).json(error.message)
         }
 
-        const { username } = req.body
+        const { id } = req.params
 
         //check if teacher is registered
-        const teacher = await Teachers.findById(req.params.id)
+        const teacher = await Teachers.findById(id)
         if (!teacher) {
             res.status(400).json({ message: 'teacher not found' })
         }
@@ -637,19 +639,29 @@ const inboxMessage = asyncHandler(async (req, res) => {
 const replyTeacher = asyncHandler(async (req, res) => {
     try {
 
-        const { id } = req.params
+        const { error, value } = await replyTeacherValidator(req.body, { abortEarly: false })
+        if(error) {
+            res.status(400).json(error.message)
+        }
+
+        const { teacher_id } = req.params
         const { message } = req.body;
 
+        //if the teacher sending the message is registered
+        const senderTeacher = await Teachers.findById({ _id: teacher_id})
+        if (!senderTeacher) {
+            res.status(404).json({ message: 'teacher cannot send message'})
+        }
         //check if the other teacher is regsitered
-        const receiverTeacher = await Teachers.findById(id)
+        const receiverTeacher = await Teachers.findById({ _id: teacher_id})
         if (!receiverTeacher) {
             res.status(404).json({ message: 'teacher cannot receive message' })
         }
 
         //send message
         const replyMessage = new Message()
-        replyMessage.sender = senderTeacher
-        replyMessage.receiver = receiverTeacher.id
+        replyMessage.sender = senderTeacher.name
+        replyMessage.receiver = receiverTeacher.name
         replyMessage.content = message
 
         //save to database
@@ -664,37 +676,37 @@ const replyTeacher = asyncHandler(async (req, res) => {
 
 
 //Teacher sends message to students inbox
-const messageStudent = asyncHandler(async (req, res) => {
-    try {
+// const messageStudent = asyncHandler(async (req, res) => {
+//     try {
 
-        const { email, message } = req.body;
+//         const { email, message } = req.body;
 
-        //check if teacher is registered 
-        const teacher = await Teachers.findOne({ email })
-        if (!teacher) {
-            res.status(404).json({ message: 'teacher cant message student' })
-        }
+//         //check if teacher is registered 
+//         const teacher = await Teachers.findOne({ email })
+//         if (!teacher) {
+//             res.status(404).json({ message: 'teacher cant message student' })
+//         }
 
-        //search for student 
-        const student = await students.findById(req.params.id)
-        if (!student) {
-            res.status(404).json({ message: 'cant find student' })
-        }
+//         //search for student 
+//         const student = await students.findById(req.params.id)
+//         if (!student) {
+//             res.status(404).json({ message: 'cant find student' })
+//         }
 
-        //teacher sends a message to students
-        const theMessage = new Message()
-        theMessage.sender = teacher
-        theMessage.receiver = student
-        theMessage.content = message
+//         //teacher sends a message to students
+//         const theMessage = new Message()
+//         theMessage.sender = teacher
+//         theMessage.receiver = student
+//         theMessage.content = message
 
-        //save to database
-        await theMessage.save()
+//         //save to database
+//         await theMessage.save()
 
-        res.status(200).json({ message: 'message sent to student' })
-    } catch (error) {
-        this
-    }
-})
+//         res.status(200).json({ message: 'message sent to student' })
+//     } catch (error) {
+//         this
+//     }
+// })
 
 
 
@@ -717,6 +729,6 @@ module.exports = {
     uploadStudentScore,
     inboxMessage,
     replyTeacher,
-    messageStudent,
+   // messageStudent,
     sendAssignment
 }
