@@ -10,7 +10,7 @@ const { registerTeacherValidator, teacherLoginValidator, verifyTeacherOtpValidat
     resendTeacherOtp, resetTeacherPasswordLinkValidator, teacherPasswordlLinkValidator,
     changePasswordValidator, uploadScoreValidator, sendEmailToAllValidator, 
     sendEmailToOneValidator,replyTeacherValidator, sendAssignmentValidator, 
-    editScoreValidator, inboxMessageValidator} = require('../Validator/teacherValidatorSchema');
+    editScoreValidator, inboxMessageValidator, } = require('../Validator/teacherValidatorSchema');
 const { verificationMail, verifyOtpMail, passwordResetLinkMail, 
     teacherSendMailToStudents, teacherSendMailToAStudent } = require('../Shared/mailer');
 
@@ -404,10 +404,10 @@ const delete_Teacher = asyncHandler(async (req, res) => {
 const uploadPics = asyncHandler(async (req, res) => {
     try {
 
-        const { error, value } = await uploadValidator(req.body, { abortEarly: false })
-        if(error) {
-            res.status(400).json(error.message)
-        }
+        // const { error, value } = await uploadValidator(req.body, { abortEarly: false })
+        // if(error) {
+        //     res.status(400).json(error.message)
+        // }
 
         const { id } = req.params
 
@@ -439,18 +439,14 @@ const sendAssignment = asyncHandler(async (req, res) => {
 
         const { id } = req.params
 
-        const teacher = await Teachers.findById(id)
-        if (!teacher) {
-            res.status(404).json({ message: 'not this teacher' })
-        }
-
-        const { klass, subject, homework } = req.body
+        const { klass, subject, homework, student_id } = req.body
 
         //create new assignment
         const assignment = new Assignment({
             klass,
             subject,
-            homework
+            homework,
+            student_id
         })
 
         await assignment.save()
@@ -541,8 +537,6 @@ const sendEmailToAll = asyncHandler(async (req, res) => {
         if(error) {
             res.status(400).json(error.message)
         }
-        
-        const { email } = req.body
 
         //get all the students from the student database
         const studentList = await students.find()
@@ -577,7 +571,7 @@ const sendEmailToOne = asyncHandler(async (req, res) => {
 
         const { id } = req.params;
 
-        const { email } = req.body
+        //const { email } = req.body
 
         //if student is registered
         const student = await students.findById(id )
@@ -644,16 +638,16 @@ const replyTeacher = asyncHandler(async (req, res) => {
             res.status(400).json(error.message)
         }
 
-        const { teacher_id } = req.params
+        const { sender_id, receiver_id } = req.params
         const { message } = req.body;
 
         //if the teacher sending the message is registered
-        const senderTeacher = await Teachers.findById({ _id: teacher_id})
+        const senderTeacher = await Teachers.findById({ _id: sender_id})
         if (!senderTeacher) {
             res.status(404).json({ message: 'teacher cannot send message'})
         }
         //check if the other teacher is regsitered
-        const receiverTeacher = await Teachers.findById({ _id: teacher_id})
+        const receiverTeacher = await Teachers.findById({ _id: receiver_id})
         if (!receiverTeacher) {
             res.status(404).json({ message: 'teacher cannot receive message' })
         }

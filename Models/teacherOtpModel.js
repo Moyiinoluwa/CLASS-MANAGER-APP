@@ -17,7 +17,7 @@ const otpTeacher = mongoose.Schema({
         required: true
     },
 
-    isVerified: {
+    verified: {
         type: Boolean,
         default: false
     }

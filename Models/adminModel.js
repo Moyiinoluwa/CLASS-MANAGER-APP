@@ -3,11 +3,13 @@ const mongoose = require('mongoose')
 const adminSchema = mongoose.Schema({
     username: {
         type: String,
+        unique: true,
         required: true
     },
 
     email: {
         type: String,
+        unique: true,
         required: true
     },
 
@@ -16,6 +18,30 @@ const adminSchema = mongoose.Schema({
         required: true
     },
      
+    isLoggedIn: {
+        type: Boolean,
+        default: false
+    },
+
+    idLoggedOut: {
+        type: Boolean,
+        default: false
+    },
+
+    resetLink: {
+        type: String,
+        default: ''
+    },
+
+    isResetPasswordLinkSent: {
+        type: Boolean,
+        default: false
+    },
+
+    resetPasswordLinkExpirationTime: {
+        type: Date
+    }
+    
 }, {
     timestamps: true
 });

@@ -597,7 +597,13 @@ const viewStudentProfile = asyncHandler(async (req, res) => {
 
 //student can search for each other
 const studentSearch = asyncHandler(async (req, res) => {
-    try {
+    try { 
+        //validate the input
+        const {error, value } = await studentSearchValidator(req.body, { abortEarly: false })
+         if(error) {
+            res.status(400).json(error.message)
+         }
+
         const { username } = req.body;
 
         //check if student is registered

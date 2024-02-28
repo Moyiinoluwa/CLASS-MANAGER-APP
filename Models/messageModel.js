@@ -13,16 +13,15 @@ const mongoose = require('mongoose')
         required: true
     },
 
-    teacher_id: {
-        type: String,
-        required: true
-    },
+    // teacher_id: {
+    //     type: String,
+    //     required: true
+    // },
 
-    student_id: {
-        type: String,
-        required: true
-    },
-     
+    // student_id: {
+    //     type: String,
+    //     required: true
+    // },
      
     content: {
         type: String,

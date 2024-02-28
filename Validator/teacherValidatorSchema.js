@@ -61,15 +61,16 @@ const deleteValidator = joi.object({
 });
 
 //upload proile picture
-const uploadValidator = joi.object({
-  id: joi.string().required()
-});
+// const uploadValidator = joi.object({
+//   id: joi.string().required()
+// });
 
 //teacher sends assignment 
 const sendAssignmentValidator = joi.object({
   klass: joi.string().required(),
   subject: joi.string().required(),
-  homework: joi.string().required()
+  homework: joi.string().required(),
+  student_id: joi.string().required()
 });
 
 //teacher upload student score
@@ -89,12 +90,12 @@ const editScoreValidator = joi.object({
 
 //teacher sends email to all student
 const sendEmailToAllValidator = joi.object({ 
-  email: joi.string().email().required()
+  email: joi.string().email()
 });
 
 //teacher sends email to one student
 const sendEmailToOneValidator = joi.object({
-  email: joi.string().email().required()
+  email: joi.string().email()
 });
 
 //teacher sends student message
@@ -117,7 +118,7 @@ const replyTeacherValidator = joi.object({
  exports.changePasswordValidator = validator(changePasswordValidator)
  exports.updateValidator = validator(updateValidator)
  exports.deleteValidator = validator(deleteValidator)
- exports.uploadValidator = validator(uploadValidator)
+ //exports.uploadValidator = validator(uploadValidator)
  exports.sendAssignmentValidator = validator(sendAssignmentValidator)
  exports.uploadScoreValidator = validator(uploadScoreValidator)
  exports.editScoreValidator = validator(editScoreValidator)

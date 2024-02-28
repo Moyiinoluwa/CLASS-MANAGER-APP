@@ -66,10 +66,13 @@ const teacherSendMailToStudents = async (email, username) => {
     <body>
     <h1>Notice</h1>
     <h1>Hello ${username}</h1>
-    <h1> Please be informed that the Class for today has been cancelled.</h1>
+
+    <p> Please be informed that the Class for today has been cancelled.</p>
+
     <P> The time for the next class will be announced by your class rep</P>
+
     <p> Enjoy the rest of your day</p>
-    <p> Thank You.</p>
+    
 
     <p> Regards</p>
 
@@ -89,10 +92,11 @@ const teacherSendMailToAStudent = async (email, username) => {
     </head>
     <body>
     <h1>Hello ${username}</h1>
-    <h1> You must see me before the end of today.</h1>
-    <P> Failure to do so will attract punishment</P>
+
+    <p> please see me immediately after your classes.</p>
+    
     <p> Enjoy the rest of your day</p>
-    <p> Thank You.</p>
+    
 
     <p> Regards</p>
 
@@ -104,11 +108,57 @@ const teacherSendMailToAStudent = async (email, username) => {
 }
 
 
+const adminSendMailToTeachers = async(email, username) => {
+    const subject = 'NOTICE'
+    const body = `<!DOCTYPE HTML>
+    <html>
+    <head>
+    </head>
+    <body>
+    <h1>Hello ${username}</h1>
 
+    <p> All teachers are to assemble at the staff room by 4pm.</p>
+    
+    <p> Please note that this is compulsory</p>
+    
+    <p> Regards</p>
+
+    <p> Mangement </p>
+    </body>
+    </html>`
+
+    await mail.mailService.sendEmail(email, subject, body)
+    
+}
+
+const adminSendMailToStudents = async(email, username) => {
+    const subject = 'NOTICE'
+    const body = `<!DOCTYPE HTML>
+    <html>
+    <head>
+    </head>
+    <body>
+    <h1>Hello ${username}</h1>
+
+    <p> All Students are to expected to submit their log book before friday.</p>
+    
+    <p> Failure to do so will attract punishment</p>
+    
+    <p> Regards</p>
+
+    <p> Mangement </p>
+    </body>
+    </html>`
+
+    await mail.mailService.sendEmail(email, subject, body)
+    
+}
 module.exports = {
     verificationMail,
     verifyOtpMail,
     passwordResetLinkMail,
     teacherSendMailToStudents,
-    teacherSendMailToAStudent
+    teacherSendMailToAStudent,
+    adminSendMailToTeachers,
+    adminSendMailToStudents
 }

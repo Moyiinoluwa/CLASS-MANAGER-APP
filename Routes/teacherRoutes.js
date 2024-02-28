@@ -27,7 +27,7 @@ router.post('/resend-otp', Controller.resend_Otp)
 router.post('/reset-password-link', Controller.resetTeacherPasswordLink)
 
 //reset password
-router.patch('/reset-password', Controller.reset_Password)
+router.patch('/reset-password',  Controller.reset_Password)
 
 //change password 
 router.patch('/change-password', validate, Controller.change_Password)
@@ -39,7 +39,13 @@ router.put('/update/:id', validate, Controller.update_Teacher)
 router.delete('/delete/:id', validate, Controller.delete_Teacher)
 
 //upload profile picture
-router.post('/upload/:id', upload, Controller.uploadPics)
+router.post('/upload/:id', upload, validate, Controller.uploadPics)
+
+//teacher sends assignment
+router.post('/send-assignment/:id', validate, Controller.sendAssignment)
+
+//teacher upload student's score
+router.post('/upload-score/:id', validate, Controller.uploadStudentScore)
 
 //Edit student score
 router.put('/update/:id/score', validate, Controller.editStudentScore)
@@ -48,21 +54,16 @@ router.put('/update/:id/score', validate, Controller.editStudentScore)
 router.post('/send-mails', validate, Controller.sendEmailToAll)
 
 //Teacher sends mail to a student
-router.post('/send-to-student', validate, Controller.sendEmailToOne)
-
-//teacher upload student's score
-router.post('/:id/upload-score', validate, Controller.uploadStudentScore)
+router.post('/send-to/:id', validate, Controller.sendEmailToOne)
 
 //teacher receives students message in the inbox
 router.post('/send-message/:student_id/:teacher_id', validate, Controller.inboxMessage)
 
 //Teacher send message to each other
-router.post('/reply-teacher', validate, Controller.replyTeacher)
+router.post('/reply-teacher/:sender_id/:receiver_id', validate, Controller.replyTeacher)
 
 //teacher message student
 //router.post('/message-student', validate, Controller.messageStudent)
 
-//teacher sends assignment
-router.post('/send-assignment/:id', validate, Controller.sendAssignment)
 
 module.exports = router;
