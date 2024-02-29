@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const Controller = require('../Controlers/adminController')
-
+const validate = require('../Middleware/validateToken')
 
 //register
 router.post('/register', Controller.registerAdmin)
@@ -28,25 +28,25 @@ router.post('/send-reset-password', Controller.resetAdminPasswordLink)
 router.post('/reset-password', Controller.resetAdminPassword)
 
 //change password
-router.patch('/change-password', Controller.changeAdminPassword)
+router.patch('/change-password', validate, Controller.changeAdminPassword)
 
 //delete admin profile
-router.delete('/delete/:id', Controller.deleteAdmin)
+router.delete('/delete/:id', validate, Controller.deleteAdmin)
 
-//admin deletes a teacher account
-router.delete('/delete/:teacher_id', Controller.deleteTeacherAccount)
+//admin deletes a teacher's account
+router.delete('/delete-teacher/:id', validate, Controller.deleteTeacherAccount)
 
 //admin deleted students account
-router.delete('/delete/:student_id', Controller.deleteStudentProfile)
+router.delete('/delete-student/:id', validate, Controller.deleteStudentProfile)
 
 //update teacher
-router.put('/update/id', Controller.updateTeacherProfile)
+router.put('/update/id', validate, Controller.updateTeacherProfile)
 
 //send email to teacher
-router.post('/send-email', Controller.sendMaailToTeachers)
+router.post('/send-email', validate, Controller.sendMailToTeachers)
 
 //send email to student
-router.post('/send-email-student', Controller.sendMailToStudents)
+router.post('/send-email-student', validate, Controller.sendMailToStudents)
 
 
 

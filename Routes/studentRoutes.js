@@ -5,7 +5,7 @@ const upload = require('../Middleware/uploadProfilePicture')
 const validate = require('../Middleware/validateToken')
 
 //get all students
-router.get('/get-students', Controller.getStudent )
+router.get('/get', Controller.getStudent )
 
 //get student id
 router.get('/get/:id', Controller.getStudentId )
@@ -38,16 +38,16 @@ router.put('/update/:id', validate, Controller.updateStudent )
 router.delete('/delete/:id', validate, Controller.deleteStudent )
 
 //upload profile picture
-router.post('/upload/:id', upload, validate, Controller.profilePic)
+router.patch('/upload/:id', upload, validate, Controller.profilePic)
 
 //student can view their score
 router.get('/view-score', validate, Controller.studentScore)
 
 //send message to teacher
-router.post('/message-teacher', validate, Controller.messageTeacher)
+router.post('/message-teacher/:student_id/:teacher_id', validate, Controller.messageTeacher)
 
 //send message to fellow student
-router.post('/message-student', validate, Controller.messageStudent)
+router.post('/message-student/:sender_id/:receiver_id', validate, Controller.messageStudent)
 
 //view student profile
 router.get('/view-profile', validate, Controller.viewStudentProfile)
@@ -55,8 +55,5 @@ router.get('/view-profile', validate, Controller.viewStudentProfile)
 //search for a student
 router.get('/student-page', validate, Controller.studentSearch)
 
-//chatroom
-router.post('/chatroom', validate, Controller.studentChatRoom)
-
-
+ 
 module.exports = router;

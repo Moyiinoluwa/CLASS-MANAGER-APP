@@ -48,23 +48,10 @@ const changePasswordValidator = joi.object({
     oldPassword: joi.string().min(8).max(16).required()
 });
 
-//update student profile
-const updateStudentValidator = joi.object({
-    id: joi.string().required()
-});
-
-//delete student profile
-const deletestudentvalidator = joi.object({
-    id: joi.string().required()
-});
-
-//upload profile picture
-const uploadProfilePictureValidator = joi.object({
-    id: joi.string().required()
-});
-
 //student submit assignment
-
+const sumbitAssignmentValidator = joi.object({
+    subject: joi.string().required()
+})
 //student check score
 const studentScoreValidator = joi.object({
     subject: joi.string().required()
@@ -93,10 +80,8 @@ exports.resendOtpValidator = validator(resendOtpValidator)
 exports.resetPasswordLinkValidator = validator(resetPasswordLinkValidator)
 exports.setPasswordValidator = validator(setPasswordValidator)
 exports.changePasswordValidator = validator(changePasswordValidator)
-exports.updateStudentValidator = validator(updateStudentValidator)
-exports.deletestudentValidator = validator(deletestudentvalidator)
-exports.uploadProfilePictureValidator = validator(uploadProfilePictureValidator)
 exports.studentScoreValidator = validator(studentScoreValidator)
 exports.messageTeacherVaildator = validator(messageTeacherVaildator)
 exports.messageStudentVaildator = validator(messageStudentVaildator)
 exports.studentSearchValidator = validator(studentSearchValidator)
+exports.sumbitAssignmentValidator = validator(sumbitAssignmentValidator)

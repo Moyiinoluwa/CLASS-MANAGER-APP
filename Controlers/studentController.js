@@ -8,8 +8,7 @@ const Teachers = require('../Models/teacherModel')
 const Message = require('../Models/messageModel')
 const { signupValidator, loginValidator, verifyOtpValidator,
      resendOtpValidator, resetPasswordLinkValidator, setPasswordValidator,
-    changePasswordValidator, updateStudentValidator, deletestudentValidator,
-    uploadProfilePictureValidator, messageStudentVaildator, messageTeacherVaildator,
+    changePasswordValidator, updateStudentValidator,  messageStudentVaildator, messageTeacherVaildator,
      studentScoreValidator, studentSearchValidator} = require('../Validator/validatorSchema')
 const { verificationMail, verifyOtpMail, passwordResetLinkMail } = require('../Shared/mailer')
 
@@ -213,20 +212,12 @@ const resendOtp = asyncHandler(async (req, res) => {
         const expirationTime = new Date()
         expirationTime.setMinutes(expirationTime.getMinutes() + 5)
 
-        // // check if the previous OTP has expired
-        // const previousOtp = await Otp.findOne({ email: student.email }).sort({ createdAt: -1 })
-
-        // if (previousOtp && previousOtp.expirationTime <= new Date()) {
-        //     res.status(401).json({ message: 'Previous OTP has expired, please request for a new one' })
-        //     return;
-        // }
-
         // save new otp to database
-        const otpNew = new Otp({
-            otp: newOtp,
-            email: student.email,
-            expirationTime: expirationTime
-        });
+        const otpNew = new Otp()
+        otpNew.otp = newOtp
+        otpNew.email= student.email
+        otpNew.expirationTime = expirationTime
+        
 
         await otpNew.save()
 
@@ -336,10 +327,8 @@ const changePassword = asyncHandler(async (req, res) => {
         }
 
         //compare the password
-        if (student && await bcrypt.compare(oldPassword, student.password)) {
-            res.status(200).json({ message: 'correct password' })
-
-
+        if (student &&  bcrypt.compare(oldPassword, student.password)) {
+            
             //hash the new password 
             const hashN = await bcrypt.hash(newPassword, 10)
 
@@ -393,12 +382,6 @@ const updateStudent = asyncHandler(async (req, res) => {
 //Delete student
 const deleteStudent = asyncHandler(async (req, res) => {
     try {
-
-        const { error, value } = await deletestudentValidator(req.body, { abortEarly: false })
-        if(error) {
-            res.status(400).json(error.message)
-        }
-         
         const { id } = req.params
 
         const student = await Student.findById(id)
@@ -416,12 +399,6 @@ const deleteStudent = asyncHandler(async (req, res) => {
 //upload student profile picture
 const profilePic = asyncHandler(async (req, res) => {
     try {
-
-        const { error, value } = await uploadProfilePictureValidator(req.body, { abortEarly: false })
-        if(error) { 
-            res.status(400).json(error.message)
-        }
-
         const { id } = req.params
 
         const student = await Student.findById(id)
@@ -444,8 +421,12 @@ const profilePic = asyncHandler(async (req, res) => {
 //sumbit student assignment just once
 const sumbitAssignment = asyncHandler(async (req, res) => {
     try {
+        const { error, value } = await sumbitAssignmentValidator(req.body, { abortEarly: false })
+        if(error) {
+            res.status(400).json(error.message)
+        }
 
-        const { student_id, klass, } = req.body
+        const { suject } = req.body
 
         const student = await Student.findById(id)
         //check if student exists
@@ -490,6 +471,7 @@ const studentScore = asyncHandler(async (req, res) => {
         throw error
     }
 });
+
 //Students can see the list of the teachers and can message them
 const messageTeacher = asyncHandler(async (req, res) => {
     try {
@@ -499,22 +481,18 @@ const messageTeacher = asyncHandler(async (req, res) => {
             res.status(400).json(error.message)
         }
 
-        const {student_id, teacher_id } = req.params
+        const { student_id, teacher_id } = req.params
 
         const { message } = req.body
 
         //check if student is registred
-        const student = await Student.findById({ id_: student_id})
+        const student = await Student.findById({ _id: student_id})
         if (!student) {
             res.status(404).json({ message: 'unknown student' })
         }
 
-        //find all teachers
-        const teacherList = await Teachers.find()
-        res.status(200).json(teacherList)
-
         //send message to teacher's inbox
-        const teacher = await Teachers.findById({ _id: teacher_id})
+        const teacher = await Teachers.findById({ _id: teacher_id })
         if (!teacher) {
             res.status(404).json({ message: 'cant find teacher' })
         }
@@ -528,10 +506,13 @@ const messageTeacher = asyncHandler(async (req, res) => {
         //save to database
         await text.save()
 
+        res.status(200).json({ message: 'message sent to teacher'})
+
     } catch (error) {
         throw error
     }
 });
+
 //student can message each other
 const messageStudent = asyncHandler(async (req, res) => {
     try {
@@ -540,18 +521,18 @@ const messageStudent = asyncHandler(async (req, res) => {
         if(error) {
             res.status(400).json(error.message)
         }
-        const { id } = req.params
+        const { sender_id, receiver_id} = req.params
 
         const { message } = req.body
 
         //if student is registered
-        const student = await Student.findById(id)
+        const student = await Student.findById({ _id: sender_id })
         if (!student) {
             res.status(404).json({ message: 'void student' })
         }
 
         //find the other student
-        const aStudent = await Student.findById(id)
+        const aStudent = await Student.findById({ _id: receiver_id })
         if (!aStudent) {
             res.status(404).json({ message: 'student not found by id' })
         }
@@ -606,12 +587,6 @@ const studentSearch = asyncHandler(async (req, res) => {
 
         const { username } = req.body;
 
-        //check if student is registered
-        const student = await Student.findById(id)
-        if (!student) {
-            res.status(404).json({ messagea: 'no student' })
-        }
-
         //search for student with username
         const searchStudent = await Student.findOne({ username })
         if (!searchStudent) {
@@ -624,22 +599,7 @@ const studentSearch = asyncHandler(async (req, res) => {
         throw error
     }
 });
-//Students chat with each other in the chatroom
-const studentChatRoom = asyncHandler(async (req, res) => {
-    try {
-        const { email } = req.body;
 
-        //only registered students are allowed
-        const student = await Student.findOne({ email })
-        if (!student) {
-            res.status(403).json({ message: 'No access to non student' })
-        }
-
-        res.status(200).json({ message: 'access granted' })
-    } catch (error) {
-        throw error
-    }
-});
 
 
 
@@ -662,5 +622,4 @@ module.exports = {
     messageStudent,
     viewStudentProfile,
     studentSearch,
-    studentChatRoom
 }

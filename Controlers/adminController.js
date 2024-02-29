@@ -5,8 +5,9 @@ const Admin = require('../Models/adminModel')
 const Adminotp = require('../Models/adminOtpModel')
 const Teacher = require('../Models/teacherModel')
 const Student = require('../Models/studentModel')
-const { loginAdminValidator, registerAdminValidator, verifyOtpValidator, changeAdminPasswordValidator,
-     resendOtpValidator, resetAdminPasswordLinkValidator, sendAdminPasswordValidator} = require('../Validator/adminValidator')
+const { loginAdminValidator, registerAdminValidator, verifyAdminOtpValidator, 
+    changeAdminPasswordValidator, resendAdminOtpValidator, resetAdminPasswordLinkValidator, 
+    sendAdminPasswordValidator, } = require('../Validator/adminValidator')
 const { verificationMail, verifyOtpMail, passwordResetLinkMail, adminSendMailToTeachers, adminSendMailToStudents} = require('../Shared/mailer')
 
 
@@ -14,12 +15,13 @@ const { verificationMail, verifyOtpMail, passwordResetLinkMail, adminSendMailToT
 const generateOtp = () => {
     const min = 100000;
     const max = 999999;
-    const otp = Math.floor(min-Math.floor * (max - min) + 1).toString()
+    const otp = Math.floor(min + Math.random() * (max - min) + 1).toString()
     return otp
 } 
 
 
 const registerAdmin = asyncHandler(async(req, res) => {
+    console.log('admin')
     try {
         
         const { error, value } = await registerAdminValidator(req.body, { abortEarly: false }) 
@@ -80,6 +82,8 @@ const loginAdmin = asyncHandler(async(req, res) => {
             res.status(400).json(error.message)
         }
 
+        const {email, password} = req.body
+
         //check if admin is registered
         const admin = await Admin.findOne({ email })
         if(!admin) {
@@ -131,7 +135,7 @@ const getAdmin = asyncHandler(async(req, res) => {
 const verifyAdminOtp = asyncHandler(async(req, res) => {
     try {
         //validate the input
-        const { error, value } = await verifyOtpValidator(req.body, { abortEarly: false })
+        const { error, value } = await verifyAdminOtpValidator(req.body, { abortEarly: false })
         if(error) {
             res.status(400).json(error.message)
         }
@@ -181,7 +185,7 @@ const resendAdminOtp = asyncHandler(async(req, res) => {
     try {
         
         //Validate the input
-        const { error, value } = await resendOtpValidator(req.body, { abortEarly: false })
+        const { error, value } = await resendAdminOtpValidator(req.body, { abortEarly: false })
         if(error) {
             res.status(400).json(error.message)
         }
@@ -245,7 +249,7 @@ const resetAdminPasswordLink = asyncHandler(async(req, res) => {
         await admin.save()
 
         //send it to the admin via mail
-        await passwordResetLinkMail(email, adminPasswordLink, admin.email)
+        await passwordResetLinkMail(email, adminPasswordLink, admin.username)
 
         res.status(200).json({ message: 'reset password link sent'})
         
@@ -314,9 +318,7 @@ const changeAdminPassword = asyncHandler(async(req, res) => {
 
         //if the  password entered matches the exixting password
         if(admin && bcrypt.compare(oldPassword, admin.password)) {
-            res.status(200).json({ message: 'correct password'})
-        
-
+    
         //hash password
         const hashpass = await bcrypt.hash(newPassword, 10)
 
@@ -325,11 +327,12 @@ const changeAdminPassword = asyncHandler(async(req, res) => {
 
         await admin.save()
 
-        res.status(200).json({ message: 'password changed'})
         } else {
             res.status(404).json({ message: 'incorrect password'})
         }
         
+        res.status(200).json({ message: 'password changed'})
+
     } catch (error) {
         throw error
     }
@@ -374,15 +377,15 @@ const deleteAdmin = asyncHandler(async(req, res) => {
 const deleteTeacherAccount = asyncHandler(async(req, res) => {
     try {
 
-        const { teacher_id} = req.params
+        const {id} = req.params
 
         //check if teacher is registered
-        const teacher = await Teacher.findById(teacher_id)
+        const teacher = await Teacher.findById(id)
         if (!teacher) {
             res.status(404).json({ message: 'admin cannot find teacher'})
         }
 
-         const deleteTeacher = await Teacher.deleteOne({_id: teacher_id})
+         const deleteTeacher = await Teacher.deleteOne({_id: id})
          res.status(200).json({ message: 'teacher profile deleted'})
 
     } catch (error) {
@@ -394,15 +397,15 @@ const deleteTeacherAccount = asyncHandler(async(req, res) => {
 const deleteStudentProfile = asyncHandler(async(req, res) => {
     try {
         
-        const { student_id } = req.params
+        const { id } = req.params
         
         //check if student is registered
-        const student = await Student.findById(student_id)
+        const student = await Student.findById(id)
         if(!student) {
             res.status(404).json({ message: 'student not found'})
         }
 
-        const deleteStudent = await Student.deleteOne({ _id: student_id })
+        const deleteStudent = await Student.deleteOne({ _id: id })
         res.status(200).json({ message: 'Student account deleted' })
 
     } catch (error) {
@@ -440,8 +443,15 @@ const updateStudentProfile = asyncHandler(async(req, res) => {
     }
 });
 //Post Announcements for teachers and students
-const sendMaailToTeachers = asyncHandler(async(req, res) => {
+const sendMailToTeachers = asyncHandler(async(req, res) => {
     try {
+
+        // const { error, value } = await adminSendEmailToTeachersValidator(req.body, { abortEarly: false })
+        //  if(error) {
+        //     res.status(400).json(error.message)
+        //  }
+
+     //   const { email } = req.body
 
         //find all teachers
         const teachers = await Teacher.find()
@@ -452,7 +462,7 @@ const sendMaailToTeachers = asyncHandler(async(req, res) => {
         //send message to them via mail
         const sendMails = []
         teachers.forEach((teacher) => {
-            sendMails.push(email)
+            sendMails.push(teacher.email)
         })
 
         await adminSendMailToTeachers(sendMails)
@@ -473,12 +483,12 @@ const sendMailToStudents = asyncHandler(async(req, res) => {
 
         const sendEmail = [] 
         students.forEach(student => {
-            sendEmail.push(email)
+            sendEmail.push(student.email)
         });
 
         await adminSendMailToStudents(sendEmail)
 
-        res.status(200).json({ message: 'email sent to teachers'})
+        res.status(200).json({ message: 'email sent students'})
     } catch (error) {
         throw error
     }
@@ -501,6 +511,6 @@ module.exports = {
     deleteStudentProfile,
     updateTeacherProfile,
     updateStudentProfile,
-    sendMaailToTeachers,
+    sendMailToTeachers,
     sendMailToStudents
 }

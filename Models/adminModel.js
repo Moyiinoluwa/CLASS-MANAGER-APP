@@ -40,8 +40,15 @@ const adminSchema = mongoose.Schema({
 
     resetPasswordLinkExpirationTime: {
         type: Date
+    },
+
+    role: {
+        type: String,
+        enum: ['admin', 'teacher', 'student'],
+        default: 'admin'
     }
     
+
 }, {
     timestamps: true
 });

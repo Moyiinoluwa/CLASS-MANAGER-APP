@@ -62,8 +62,5 @@ router.post('/send-message/:student_id/:teacher_id', validate, Controller.inboxM
 //Teacher send message to each other
 router.post('/reply-teacher/:sender_id/:receiver_id', validate, Controller.replyTeacher)
 
-//teacher message student
-//router.post('/message-student', validate, Controller.messageStudent)
-
 
 module.exports = router;

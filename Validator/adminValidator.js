@@ -41,13 +41,22 @@ const sendAdminPasswordValidator = joi.object({
 //change password
 const changeAdminPasswordValidator = joi.object({
     email: joi.string().email().lowercase().required(),
-    oldPassword: joi.string().min(8).max(16).required()
+    oldPassword: joi.string().min(8).max(16).required(),
+    newPassword: joi.string().min(8).max(16).required()
 });
 
 //update admin
 const updateAdminValidator = joi.object({
     
 });
+
+//send email to teachers
+// const adminSendEmailToTeachersValidator = joi.object({
+//     email: joi.string().email().required()
+// });
+
+
+
 
  exports.registerAdminValidator = validator(registerAdminValidator)
  exports.loginAdminValidator = validator(loginAdminValidator)
@@ -56,3 +65,4 @@ const updateAdminValidator = joi.object({
  exports.resetAdminPasswordLinkValidator = validator(resetAdminPasswordLinkValidator)
  exports.sendAdminPasswordValidator = validator(sendAdminPasswordValidator)
  exports.changeAdminPasswordValidator = validator(changeAdminPasswordValidator)
+ //exports.adminSendEmailToTeachersValidator = validator(adminSendEmailToTeachersValidator)
