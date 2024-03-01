@@ -47,9 +47,28 @@ const changeAdminPasswordValidator = joi.object({
 
 //update admin
 const updateAdminValidator = joi.object({
-    
+    username: joi.string().required(),
+    email: joi.string().email().lowercase().required(),
+    password: joi.string().min(8).max(16).required()
 });
 
+const adminUpdateTeacherValidator = joi.object({
+    surname: joi.string().required(),
+    name: joi.string().required(),
+    username: joi.string().required(),
+    email: joi.string().email().lowercase().required(),
+    subject: joi.string().required(),
+    qualification: joi.string().required(),
+    password: joi.string().min(8).max(16).required()
+});
+
+const adminUpdateStudentValidator = joi.object({
+    surname: joi.string().required(),
+    name: joi.string().required(),
+    email: joi.string().email().lowercase().required(),
+    username: joi.string().required(),
+    password: joi.string().min(8).max(16).required()
+});
 //send email to teachers
 // const adminSendEmailToTeachersValidator = joi.object({
 //     email: joi.string().email().required()
@@ -65,4 +84,7 @@ const updateAdminValidator = joi.object({
  exports.resetAdminPasswordLinkValidator = validator(resetAdminPasswordLinkValidator)
  exports.sendAdminPasswordValidator = validator(sendAdminPasswordValidator)
  exports.changeAdminPasswordValidator = validator(changeAdminPasswordValidator)
+ exports.updateAdminValidator = validator(updateAdminValidator)
+ exports.adminUpdateTeacherValidator = validator(adminUpdateTeacherValidator)
+ exports.adminUpdateStudentValidator = validator(adminUpdateStudentValidator)
  //exports.adminSendEmailToTeachersValidator = validator(adminSendEmailToTeachersValidator)

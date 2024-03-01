@@ -48,7 +48,7 @@ router.post('/send-assignment/:id', validate, Controller.sendAssignment)
 router.post('/upload-score/:id', validate, Controller.uploadStudentScore)
 
 //Edit student score
-router.put('/update/:id/score', validate, Controller.editStudentScore)
+router.patch('/update-score/:id', validate, Controller.editStudentScore)
 
 //Teacher sends mail to all student
 router.post('/send-mails', validate, Controller.sendEmailToAll)

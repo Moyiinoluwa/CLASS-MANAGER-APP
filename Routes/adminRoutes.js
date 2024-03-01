@@ -33,6 +33,9 @@ router.patch('/change-password', validate, Controller.changeAdminPassword)
 //delete admin profile
 router.delete('/delete/:id', validate, Controller.deleteAdmin)
 
+//update admin profile
+router.put('/update/:id', validate, Controller.updateAdmin)
+
 //admin deletes a teacher's account
 router.delete('/delete-teacher/:id', validate, Controller.deleteTeacherAccount)
 
@@ -40,7 +43,10 @@ router.delete('/delete-teacher/:id', validate, Controller.deleteTeacherAccount)
 router.delete('/delete-student/:id', validate, Controller.deleteStudentProfile)
 
 //update teacher
-router.put('/update/id', validate, Controller.updateTeacherProfile)
+router.put('/update-teacher/:id', validate, Controller.updateTeacherProfile)
+
+//update student
+router.put('/update-student/:id', validate, Controller.updateStudentProfile)
 
 //send email to teacher
 router.post('/send-email', validate, Controller.sendMailToTeachers)

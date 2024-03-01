@@ -509,6 +509,8 @@ const editStudentScore = asyncHandler(async (req, res) => {
 
         const { id } = req.params
 
+        const { klass, student_id, subject, score, } = req.body;
+
         //if the student is registered
         const student = await students.findById(id)
         if (student) {
@@ -516,8 +518,10 @@ const editStudentScore = asyncHandler(async (req, res) => {
         }
 
         //update score
-        const  { updateScore } = req.body
-         student.score = updateScore
+         student.score = score
+         student.klass = klass
+         student.subject = subject
+         student.student_id = student_id
 
         //save to database 
         await student.save()

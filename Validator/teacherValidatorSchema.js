@@ -85,7 +85,9 @@ const uploadScoreValidator = joi.object({
 //teacher edit student score
 const editScoreValidator = joi.object({
   id: joi.string().required(),
-  score: joi.string().required()
+  score: joi.string(),
+  klass: joi.string().required(),
+  student_id: joi.string().required()
 });
 
 //teacher sends email to all student

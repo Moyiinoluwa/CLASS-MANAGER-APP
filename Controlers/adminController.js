@@ -7,7 +7,7 @@ const Teacher = require('../Models/teacherModel')
 const Student = require('../Models/studentModel')
 const { loginAdminValidator, registerAdminValidator, verifyAdminOtpValidator, 
     changeAdminPasswordValidator, resendAdminOtpValidator, resetAdminPasswordLinkValidator, 
-    sendAdminPasswordValidator, } = require('../Validator/adminValidator')
+    sendAdminPasswordValidator, updateAdminValidator, adminUpdateTeacherValidator, adminUpdateStudentValidator } = require('../Validator/adminValidator')
 const { verificationMail, verifyOtpMail, passwordResetLinkMail, adminSendMailToTeachers, adminSendMailToStudents} = require('../Shared/mailer')
 
 
@@ -343,12 +343,29 @@ const changeAdminPassword = asyncHandler(async(req, res) => {
 const updateAdmin = asyncHandler(async(req, res) => {
     try {
         
+        const { error, value } = await updateAdminValidator(req.body, { abortEarly: false })
+        if(error) {
+            res.status(400).json(error.message)
+        }
+
         const { id } = req.params
+
+        const { username, email, password } = req.body;
 
         const admin = await Admin.findById(id)
         if(!admin) {
             res.status.apply(404).json({ message: 'cant find admin'})
         }
+
+        //update changes
+        admin.username = username
+        admin.email = email
+        admin.password = password
+
+        //save to database
+        await admin.save()
+
+        res.status(200).json({ message: 'admin updated' })
 
     } catch (error) {
         throw error
@@ -417,12 +434,34 @@ const deleteStudentProfile = asyncHandler(async(req, res) => {
 const updateTeacherProfile = asyncHandler(async(req, res) => {
     try {
         
+        const { error, value } = await adminUpdateTeacherValidator(req.body, { abortEarly: false })
+        if(error) {
+            res.status(400).json(error.message)
+        }
+
         const { id } = req.params
-        
+
+        const { surname, name, qualification, subject, username, password} = req.body;
+
+        //if teacher is regsiterd
         const teacher = await Teacher.findById(id)
         if(!teacher) {
             res.status(404).json({ message: 'not teacher'})
         }
+
+        //update the teacher profile
+        teacher.subject = subject
+        teacher.surname = surname
+        teacher.name = name
+        teacher.qualification = qualification
+        teacher.username = username
+        teacher.password = password
+
+        //save changes to database
+        await teacher.save()
+
+        res.status(200).json({ message: 'teacher profile updated'})
+
     } catch (error) {
         throw error
     }
@@ -432,12 +471,32 @@ const updateTeacherProfile = asyncHandler(async(req, res) => {
 const updateStudentProfile = asyncHandler(async(req, res) => {
     try {
         
+        const { error, value } = await adminUpdateStudentValidator(req.body, { abortEarly: false })
+        if(error) {
+            res.status(400).json(error.message)
+        }
+
         const { id } = req.params
         
-        const teacher = await Teacher.findById(id)
-        if(!teacher) {
-            res.status(404).json({ message: 'not teacher'})
+        const { surname, name, email, username, password } = req.body;
+
+        const student = await Student.findById(id)
+        if(!student) {
+            res.status(404).json({ message: 'not student'})
         }
+
+        //update student profile
+        student.surname = surname
+        student.email = email
+        student.name = name
+        student.username = username
+        student.password = password
+
+        //save changes to database
+        await student.save(
+
+        res.status(200).json({ message: 'student profile updated'})
+        )
     } catch (error) {
         throw error
     }
@@ -507,6 +566,7 @@ module.exports = {
     resetAdminPassword,
     changeAdminPassword,
     deleteAdmin,
+    updateAdmin,
     deleteTeacherAccount,
     deleteStudentProfile,
     updateTeacherProfile,

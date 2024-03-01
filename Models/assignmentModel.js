@@ -16,11 +16,6 @@ const assignmentSchema = mongoose.Schema({
         default: ''
     },
 
-    editScore: {
-        type: String,
-        default: ''
-    },
-
     student_id: {
         type: String,
         required: true
