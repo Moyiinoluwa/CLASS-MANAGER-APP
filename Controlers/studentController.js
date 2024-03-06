@@ -1,4 +1,5 @@
 const asyncHandler = require('express-async-handler')
+const download = require('download')
 const Student = require('../Models/studentModel')
 const bcrypt = require('bcrypt')
 const Otp = require('../Models/otpStudentModel')
@@ -418,6 +419,54 @@ const profilePic = asyncHandler(async (req, res) => {
     }
 });
 
+//The student downloads the assignment file.
+const downloadAssignment = asyncHandler(async(req, res) => {
+    try {
+        
+        const { id } = req.params
+
+        //if student is registered
+        const student = await Student.findById(id)
+        if(!student) {
+            res.status(404).json({ message: 'student cant download'})
+        }
+
+        //student gets the file path or url of the assigment from their pofile
+        const assignmentUrl = student.assignment
+
+        //the path of assignment will be downloaded
+        const assigmentPath = `${__dirname}/downloadedAssignment`
+
+       await download(assignmentUrl, assigmentPath)
+
+       res.status(200).json({ message: 'Assignment downloaded successfully' })
+
+    } catch (error) {
+        throw error
+    }
+});
+
+//student uploads the answer to the assignment
+const uploadAnswer = asyncHandler(async(req, res) => {
+    try {
+        
+        const { id } = req.params
+
+        const student = await Student.findById(id)
+        if(!student) {
+            res.status(404).json({ message: 'student cant upload answer'})
+        }
+
+        const answerQuestion = req.file.filename
+        student.answer = answerQuestion
+
+        res.status(200).json({ message: 'answer uploaded'})
+
+    } catch (error) {
+        throw error
+    }
+});
+
 //sumbit student assignment just once
 const sumbitAssignment = asyncHandler(async (req, res) => {
     try {
@@ -622,4 +671,6 @@ module.exports = {
     messageStudent,
     viewStudentProfile,
     studentSearch,
+    downloadAssignment,
+    uploadAnswer
 }

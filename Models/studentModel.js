@@ -63,6 +63,17 @@ const studentSchema = mongoose.Schema({
         default: ''
     },
 
+    assignment: {
+        type: String,
+        data: Buffer,
+        default: ''
+    },
+
+    answer: {
+        type: String,
+        default: ''
+    },
+    
     role: {
         type: String,
         enum: ['admin', 'teacher', 'student'],

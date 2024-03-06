@@ -69,7 +69,7 @@ const deleteValidator = joi.object({
 const sendAssignmentValidator = joi.object({
   klass: joi.string().required(),
   subject: joi.string().required(),
-  homework: joi.string().required(),
+  assignment: joi.string().required(),
   student_id: joi.string().required()
 });
 
@@ -79,7 +79,7 @@ const uploadScoreValidator = joi.object({
   klass: joi.string().required(),
   subject: joi.string().required(),
   score: joi.string().required(),
-  homework: joi.string().required()
+  assignment: joi.string().required()
 });
 
 //teacher edit student score

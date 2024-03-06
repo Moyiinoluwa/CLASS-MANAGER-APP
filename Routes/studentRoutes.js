@@ -3,6 +3,7 @@ const Controller = require('../Controlers/studentController')
 const router = express.Router()
 const upload = require('../Middleware/uploadProfilePicture')
 const validate = require('../Middleware/validateToken')
+const sendAnswer = require('../Middleware/uploadAnswer')
 
 //get all students
 router.get('/get', Controller.getStudent )
@@ -53,7 +54,12 @@ router.post('/message-student/:sender_id/:receiver_id', validate, Controller.mes
 router.get('/view-profile', validate, Controller.viewStudentProfile)
 
 //search for a student
-router.get('/student-page', validate, Controller.studentSearch)
+router.get('/student-page', validate, Controller.studentSearch) 
 
+//student downloads assignment
+router.get('/download-assignment', validate, Controller.downloadAssignment)
+
+//student uploads answer to the assignment
+router.post('/upload-answer', validate, sendAnswer, Controller.uploadAnswer)
  
 module.exports = router;

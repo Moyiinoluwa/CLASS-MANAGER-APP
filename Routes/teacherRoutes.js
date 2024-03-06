@@ -3,6 +3,7 @@ const Controller = require('../Controlers/teacherController')
 const router = express.Router()
 const upload = require('../Middleware/uploadProfilePicture')
 const validate = require('../Middleware/validateToken')
+const uploadAssignment = require('../Middleware/uploadAssignment')
 
 
 //get all registered teachers
@@ -43,6 +44,9 @@ router.post('/upload/:id', upload, validate, Controller.uploadPics)
 
 //teacher sends assignment
 router.post('/send-assignment/:id', validate, Controller.sendAssignment)
+
+//teacher uploads assignment 
+router.post('/upload-assignment/:id', uploadAssignment, Controller.uploadAssignment )
 
 //teacher upload student's score
 router.post('/upload-score/:id', validate, Controller.uploadStudentScore)

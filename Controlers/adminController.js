@@ -455,7 +455,7 @@ const updateTeacherProfile = asyncHandler(async(req, res) => {
         teacher.name = name
         teacher.qualification = qualification
         teacher.username = username
-        teacher.password = password
+        teacher.password = hash
 
         //save changes to database
         await teacher.save()

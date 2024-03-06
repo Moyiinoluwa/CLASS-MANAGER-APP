@@ -21,7 +21,7 @@ const assignmentSchema = mongoose.Schema({
         required: true
     },
     
-    homework: {
+    assignment: {
         type: String,
         default: ''
     },
