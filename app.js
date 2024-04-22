@@ -9,6 +9,8 @@ const cors = require('cors')
 const app = express();
 
 app.use(cors())
+ 
+app.use('/Assignment', express.static('Assignment'));
 
 
 //connection string
@@ -18,20 +20,13 @@ connectdb()
 app.use(express.json())
 
 //middleware
-app.use('/api/students', require('./Routes/studentRoutes'))
-app.use('/api/teachers', require('./Routes/teacherRoutes'))
-app.use('/api/admin', require('./Routes/adminRoutes'))
+app.use('/api/students', require('./Routes/studentRoutes'));
+app.use('/api/teachers', require('./Routes/teacherRoutes'));
+app.use('/api/admin', require('./Routes/adminRoutes'));
 
 
 //error middleware
-errorHandler()
-
-
-
-
-
-
-
+errorHandler();
 
 
 //listen on port 

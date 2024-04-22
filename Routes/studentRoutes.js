@@ -57,9 +57,10 @@ router.get('/view-profile', validate, Controller.viewStudentProfile)
 router.get('/student-page', validate, Controller.studentSearch) 
 
 //student downloads assignment
-router.get('/download-assignment', validate, Controller.downloadAssignment)
+// router.get('/download-assignment/:id', validate, Controller.downloadAssignment)
+router.get('/download-assignment/:id', validate, Controller.downloadAssignment)
 
 //student uploads answer to the assignment
-router.post('/upload-answer', validate, sendAnswer, Controller.uploadAnswer)
+router.post('/upload-answer/:id', validate, sendAnswer, Controller.uploadAnswer)
  
 module.exports = router;

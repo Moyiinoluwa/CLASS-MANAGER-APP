@@ -21,7 +21,6 @@ const loginValidator = joi.object({
 
 //verify otp validation
 const verifyOtpValidator = joi.object({
-    email: joi.string().email().lowercase().required(),
     otp: joi.string().min(6).max(6).required()
 });
 
@@ -72,6 +71,13 @@ const studentSearchValidator = joi.object({
     username: joi.string().lowercase().required()
 });
 
+//edit student profile
+const updateStudentValidator = joi.object({
+    name: joi.string().required(),
+    surname: joi.string().required(),
+    email: joi.string().required(),
+    username: joi.string().required()
+})
 
 exports.signupValidator = validator(signupValidator)
 exports.loginValidator = validator(loginValidator)
@@ -85,3 +91,5 @@ exports.messageTeacherVaildator = validator(messageTeacherVaildator)
 exports.messageStudentVaildator = validator(messageStudentVaildator)
 exports.studentSearchValidator = validator(studentSearchValidator)
 exports.sumbitAssignmentValidator = validator(sumbitAssignmentValidator)
+exports.updateStudentValidator = validator(updateStudentValidator)
+    

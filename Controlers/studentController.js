@@ -8,9 +8,9 @@ const Assignment = require('../Models/assignmentModel')
 const Teachers = require('../Models/teacherModel')
 const Message = require('../Models/messageModel')
 const { signupValidator, loginValidator, verifyOtpValidator,
-     resendOtpValidator, resetPasswordLinkValidator, setPasswordValidator,
-    changePasswordValidator, updateStudentValidator,  messageStudentVaildator, messageTeacherVaildator,
-     studentScoreValidator, studentSearchValidator} = require('../Validator/validatorSchema')
+    resendOtpValidator, resetPasswordLinkValidator, setPasswordValidator,
+    changePasswordValidator, updateStudentValidator, messageStudentVaildator, messageTeacherVaildator,
+    studentScoreValidator, studentSearchValidator } = require('../Validator/validatorSchema')
 const { verificationMail, verifyOtpMail, passwordResetLinkMail } = require('../Shared/mailer')
 
 
@@ -145,12 +145,7 @@ const verifyOtp = asyncHandler(async (req, res) => {
         }
 
         //check if the email match the email the otp was sent to
-        const { email, otp } = req.body;
-
-        const student = await Otp.findOne({ email })
-        if (!student) {
-            res.status(404).json({ message: 'the email you entered does not match the email the otp was sent to' })
-        }
+        const { otp } = req.body;
 
         //check if otp is correct 
         const studentOtp = await Otp.findOne({ otp })
@@ -161,11 +156,10 @@ const verifyOtp = asyncHandler(async (req, res) => {
         //if otp has expired
         if (studentOtp.expirationTime <= new Date()) {
             res.status(403).json({ message: 'Otp has expired' })
-            return;
         }
 
         // find the student associated with the email provided
-        const studentEmail = await Student.findOne({ email })
+        const studentEmail = await Student.findOne({ email: studentOtp.email })
         if (!studentEmail) {
             res.status(404).json({ message: 'user does not exists' })
         }
@@ -216,9 +210,9 @@ const resendOtp = asyncHandler(async (req, res) => {
         // save new otp to database
         const otpNew = new Otp()
         otpNew.otp = newOtp
-        otpNew.email= student.email
+        otpNew.email = student.email
         otpNew.expirationTime = expirationTime
-        
+
 
         await otpNew.save()
 
@@ -328,8 +322,8 @@ const changePassword = asyncHandler(async (req, res) => {
         }
 
         //compare the password
-        if (student &&  bcrypt.compare(oldPassword, student.password)) {
-            
+        if (student && bcrypt.compare(oldPassword, student.password)) {
+
             //hash the new password 
             const hashN = await bcrypt.hash(newPassword, 10)
 
@@ -353,13 +347,13 @@ const changePassword = asyncHandler(async (req, res) => {
 const updateStudent = asyncHandler(async (req, res) => {
     try {
         const { error, value } = await updateStudentValidator(req.body, { abortEarly: false })
-        if(error) {
+        if (error) {
             res.status(400).json(error.message)
         }
 
         const { id } = req.params;
 
-        const { username } = req.body;
+        const { username, email, name, surname } = req.body;
 
         //check if student is registered
         const student = await Student.findById(id)
@@ -369,6 +363,9 @@ const updateStudent = asyncHandler(async (req, res) => {
 
         //update student details with the new value
         student.username = username
+        student.email = email
+        student.name = name
+        student.surname = surname
 
         //save new value to database
         await student.save()
@@ -402,44 +399,53 @@ const profilePic = asyncHandler(async (req, res) => {
     try {
         const { id } = req.params
 
+        //check if student is registered
         const student = await Student.findById(id)
         if (!student) {
             res.status(404).json({ message: 'student error' })
         }
 
+        //get the file name of the uploaded picture
         const image = req.file.filename
+
+        //update the student profile picture property
         student.profilePicture = image
 
         //save to database 
         await student.save()
 
         res.status(200).json({ message: 'profile picture uploaded' })
+
     } catch (error) {
         throw error
     }
 });
 
 //The student downloads the assignment file.
-const downloadAssignment = asyncHandler(async(req, res) => {
+const downloadAssignment = asyncHandler(async (req, res) => {
     try {
-        
+
         const { id } = req.params
 
         //if student is registered
         const student = await Student.findById(id)
-        if(!student) {
-            res.status(404).json({ message: 'student cant download'})
+        if (!student) {
+            res.status(404).json({ message: 'student cant download' })
         }
 
         //student gets the file path or url of the assigment from their pofile
         const assignmentUrl = student.assignment
 
-        //the path of assignment will be downloaded
-        const assigmentPath = `${__dirname}/downloadedAssignment`
+        //the folder the assignment will be downloaded to
+        //const assigmentPath = `${__dirname}/downloadedAssignment`
 
-       await download(assignmentUrl, assigmentPath)
+       // await download(assignmentUrl, assigmentPath)
 
-       res.status(200).json({ message: 'Assignment downloaded successfully' })
+        res.status(200).json({ 
+            message: 'Assignment downloaded successfully',
+            downloadURL:  `http://locahost:3002/Assignment/${assignmentUrl}`
+        })
+         
 
     } catch (error) {
         throw error
@@ -447,20 +453,22 @@ const downloadAssignment = asyncHandler(async(req, res) => {
 });
 
 //student uploads the answer to the assignment
-const uploadAnswer = asyncHandler(async(req, res) => {
+const uploadAnswer = asyncHandler(async (req, res) => {
     try {
-        
+
         const { id } = req.params
 
         const student = await Student.findById(id)
-        if(!student) {
-            res.status(404).json({ message: 'student cant upload answer'})
+        if (!student) {
+            res.status(404).json({ message: 'student cant upload answer' })
         }
 
         const answerQuestion = req.file.filename
         student.answer = answerQuestion
 
-        res.status(200).json({ message: 'answer uploaded'})
+        await student.save()
+
+        res.status(200).json({ message: 'answer uploaded' })
 
     } catch (error) {
         throw error
@@ -471,7 +479,7 @@ const uploadAnswer = asyncHandler(async(req, res) => {
 const sumbitAssignment = asyncHandler(async (req, res) => {
     try {
         const { error, value } = await sumbitAssignmentValidator(req.body, { abortEarly: false })
-        if(error) {
+        if (error) {
             res.status(400).json(error.message)
         }
 
@@ -495,7 +503,7 @@ const sumbitAssignment = asyncHandler(async (req, res) => {
 const studentScore = asyncHandler(async (req, res) => {
     try {
         const { error, value } = await studentScoreValidator(req.body, { abortEarly: false })
-        if(error) {
+        if (error) {
             res.status(400).json(error.message)
         }
 
@@ -526,7 +534,7 @@ const messageTeacher = asyncHandler(async (req, res) => {
     try {
 
         const { error, value } = await messageTeacherVaildator(req.body, { abortEarly: false })
-        if(error) {
+        if (error) {
             res.status(400).json(error.message)
         }
 
@@ -535,7 +543,7 @@ const messageTeacher = asyncHandler(async (req, res) => {
         const { message } = req.body
 
         //check if student is registred
-        const student = await Student.findById({ _id: student_id})
+        const student = await Student.findById({ _id: student_id })
         if (!student) {
             res.status(404).json({ message: 'unknown student' })
         }
@@ -555,7 +563,7 @@ const messageTeacher = asyncHandler(async (req, res) => {
         //save to database
         await text.save()
 
-        res.status(200).json({ message: 'message sent to teacher'})
+        res.status(200).json({ message: 'message sent to teacher' })
 
     } catch (error) {
         throw error
@@ -565,12 +573,12 @@ const messageTeacher = asyncHandler(async (req, res) => {
 //student can message each other
 const messageStudent = asyncHandler(async (req, res) => {
     try {
-        
-        const {error, value} = await messageStudentVaildator(req.body, { abortEarly: false })
-        if(error) {
+
+        const { error, value } = await messageStudentVaildator(req.body, { abortEarly: false })
+        if (error) {
             res.status(400).json(error.message)
         }
-        const { sender_id, receiver_id} = req.params
+        const { sender_id, receiver_id } = req.params
 
         const { message } = req.body
 
@@ -627,12 +635,12 @@ const viewStudentProfile = asyncHandler(async (req, res) => {
 
 //student can search for each other
 const studentSearch = asyncHandler(async (req, res) => {
-    try { 
+    try {
         //validate the input
-        const {error, value } = await studentSearchValidator(req.body, { abortEarly: false })
-         if(error) {
+        const { error, value } = await studentSearchValidator(req.body, { abortEarly: false })
+        if (error) {
             res.status(400).json(error.message)
-         }
+        }
 
         const { username } = req.body;
 

@@ -1,4 +1,5 @@
 const asyncHandler = require('express-async-handler');
+const download = require('download')
 const Teachers = require('../Models/teacherModel');
 const students = require('../Models/studentModel')
 const teachOtp = require('../Models/teacherOtpModel')
@@ -114,10 +115,10 @@ const login_Teacher = asyncHandler(async (req, res) => {
         }
 
 
-        const { id, password } = req.body;
+        const { email, password } = req.body;
 
         //check if teacher has been registered
-        const teacher = await Teachers.findById(req.params.id)
+        const teacher = await Teachers.findOne({ email })
         if (!teacher) {
             res.status(404).json({ message: 'Teacher is not registered' })
         }
@@ -150,7 +151,7 @@ const verify_Otp = asyncHandler(async (req, res) => {
             res.status(400).json(error.message)
         }
 
-        const { email, otp } = req.body;
+        const { otp } = req.body;
         //check if the teacher is registered
         const teacher = await Teachers.findOne({ email })
         if (!teacher) {
@@ -169,7 +170,7 @@ const verify_Otp = asyncHandler(async (req, res) => {
         }
 
         //find the teacher associated with the email the otp was sent to
-        const teacherEmail = await Teachers.findOne({ email })
+        const teacherEmail = await Teachers.findOne({ email: teacherOtp.email })
         if (!teacherEmail) {
             res.status(404).json({ message: 'This is not the email the otp was sent to' })
         }
@@ -356,6 +357,8 @@ const update_Teacher = asyncHandler(async (req, res) => {
 
         const { id } = req.params
 
+        const { surname, name, username, email, qualification, subject } = req.body;
+
         //check if teacher is registered
         const teacher = await Teachers.findById(id)
         if (!teacher) {
@@ -363,12 +366,17 @@ const update_Teacher = asyncHandler(async (req, res) => {
         }
 
         //update new value
+        teacher.name = name
         teacher.username = username
+        teacher.surname = surname
+        teacher.subject = subject
+        teacher.qualification = qualification
+        teacher.email = email
 
         //save new update to database
         await teacher.save()
 
-        res.status(200).json({ message: 'Teacher updated successfully', teacher })
+        res.status(200).json({ message: 'Teacher updated successfully' })
 
     } catch (error) {
         throw error
@@ -439,6 +447,8 @@ const uploadAssignment = asyncHandler(async (req, res) => {
         const assignments = req.file.filename
         student.assignment = assignments
 
+        await student.save()
+
         res.status(200).json({ message: 'assignment uploaded' })
 
     } catch (error) {
@@ -447,12 +457,31 @@ const uploadAssignment = asyncHandler(async (req, res) => {
 });
 
 
-//The teacher retrieves the student's answer file path or URL.
-//The teacher downloads the answer file.
-//The teacher grades the assignment.
+//The teacher retrieves the student's answer file path or URL and downloads the answer file.
+const downloadAnswer = asyncHandler(async(req, res) => {
+    try {
+        
+        const { id } = req.params
 
+        //check if student is registered
+        const student = await students.findById(id)
+        if(!student) {
+            res.status(404).json({ message: 'cant download student answer'})
+        }
 
+        //get the answer URL from the students profile
+        const answerUrl = student.answer
 
+        //download the answer to the destinated folder and send a response
+        res.status(200).json({ 
+            message: 'Answer downloaded ',
+            downloadURL:  `http://locahost:3002/Assignment/${answerUrl}`
+        }) 
+
+    } catch (error) {
+        throw error
+    }
+});
 
 
 const sendAssignment = asyncHandler(async (req, res) => {
@@ -753,5 +782,6 @@ module.exports = {
     inboxMessage,
     replyTeacher,
     // messageStudent,
-    sendAssignment
+    downloadAnswer,
+    sendAssignment,
 }

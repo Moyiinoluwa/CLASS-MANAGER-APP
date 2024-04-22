@@ -18,7 +18,6 @@ const loginAdminValidator = joi.object({
 
 //verify otp
 const verifyAdminOtpValidator = joi.object({
-    email: joi.string().email().lowercase().required(),
     otp: joi.string().min(6).max(6).required()
 });
 
@@ -59,7 +58,6 @@ const adminUpdateTeacherValidator = joi.object({
     email: joi.string().email().lowercase().required(),
     subject: joi.string().required(),
     qualification: joi.string().required(),
-    password: joi.string().min(8).max(16).required()
 });
 
 const adminUpdateStudentValidator = joi.object({
@@ -67,7 +65,7 @@ const adminUpdateStudentValidator = joi.object({
     name: joi.string().required(),
     email: joi.string().email().lowercase().required(),
     username: joi.string().required(),
-    password: joi.string().min(8).max(16).required()
+
 });
 //send email to teachers
 // const adminSendEmailToTeachersValidator = joi.object({

@@ -46,7 +46,10 @@ router.post('/upload/:id', upload, validate, Controller.uploadPics)
 router.post('/send-assignment/:id', validate, Controller.sendAssignment)
 
 //teacher uploads assignment 
-router.post('/upload-assignment/:id', uploadAssignment, Controller.uploadAssignment )
+router.post('/upload-assignment/:id', validate, uploadAssignment, Controller.uploadAssignment )
+
+//teacher downloads answer
+router.get('/download-answer/:id', validate, Controller.downloadAnswer)
 
 //teacher upload student's score
 router.post('/upload-score/:id', validate, Controller.uploadStudentScore)

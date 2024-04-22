@@ -23,7 +23,6 @@ const joi = require('joi')
 
  //verify teacher otp
  const verifyTeacherOtpValidator = joi.object({
-   email: joi.string().email().required(),
    otp: joi.string().min(6).max(6).required()
  });
 
@@ -120,7 +119,6 @@ const replyTeacherValidator = joi.object({
  exports.changePasswordValidator = validator(changePasswordValidator)
  exports.updateValidator = validator(updateValidator)
  exports.deleteValidator = validator(deleteValidator)
- //exports.uploadValidator = validator(uploadValidator)
  exports.sendAssignmentValidator = validator(sendAssignmentValidator)
  exports.uploadScoreValidator = validator(uploadScoreValidator)
  exports.editScoreValidator = validator(editScoreValidator)

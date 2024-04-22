@@ -140,13 +140,7 @@ const verifyAdminOtp = asyncHandler(async(req, res) => {
             res.status(400).json(error.message)
         }
         
-        const { email, otp }  = req.body;
-
-        //check if the email is registred
-        const admin = await Adminotp.find({ email})
-        if(!admin) {
-            res.status(400).json({ message: 'this email does not match the email the otp was sent to'})
-        }
+        const { otp }  = req.body;
 
         //if the otp is correct
         const otpSent = await Adminotp.findOne({otp })
@@ -160,7 +154,7 @@ const verifyAdminOtp = asyncHandler(async(req, res) => {
         }
 
         //find the user associated with the email
-        const user = await Admin.findOne({ email })
+        const user = await Admin.findOne({ email: otpSent.email })
         if(!user) {
             res.status(404).json({ message: 'user and email does not match'})
         }
@@ -292,7 +286,7 @@ const resetAdminPassword = asyncHandler(async(req, res) => {
        admin.expirationTime = expiryLink
        admin.isResetPasswordLinkSent = false
        
-       res.status(400).json({ message: 'password reset successfully'})
+       res.status(200).json({ message: 'password reset successfully'})
 
     } catch (error) {
         throw error
@@ -441,7 +435,7 @@ const updateTeacherProfile = asyncHandler(async(req, res) => {
 
         const { id } = req.params
 
-        const { surname, name, qualification, subject, username, password} = req.body;
+        const { surname, name, qualification, subject, username} = req.body;
 
         //if teacher is regsiterd
         const teacher = await Teacher.findById(id)
@@ -455,7 +449,6 @@ const updateTeacherProfile = asyncHandler(async(req, res) => {
         teacher.name = name
         teacher.qualification = qualification
         teacher.username = username
-        teacher.password = hash
 
         //save changes to database
         await teacher.save()
@@ -478,7 +471,7 @@ const updateStudentProfile = asyncHandler(async(req, res) => {
 
         const { id } = req.params
         
-        const { surname, name, email, username, password } = req.body;
+        const { surname, name, email, username} = req.body;
 
         const student = await Student.findById(id)
         if(!student) {
@@ -490,7 +483,6 @@ const updateStudentProfile = asyncHandler(async(req, res) => {
         student.email = email
         student.name = name
         student.username = username
-        student.password = password
 
         //save changes to database
         await student.save(
