@@ -1,30 +1,30 @@
 const joi = require('joi')
 
- const validator = (schema) => (payload) => 
- schema.validate(payload, { abortEarly: false })
+const validator = (schema) => (payload) =>
+  schema.validate(payload, { abortEarly: false })
 
 
- //Registration validator
- const registerTeacherValidator = joi.object({
-    surname: joi.string().required(),
-    name: joi.string().required(),
-    subject: joi.string().required(),
-    qualification: joi.string().required(),
-    username: joi.string().lowercase().required(),
-    email: joi.string().email().required(),
-    password: joi.string().min(8).max(16).required()
- });
+//Registration validator
+const registerTeacherValidator = joi.object({
+  surname: joi.string().required(),
+  name: joi.string().required(),
+  subject: joi.string().required(),
+  qualification: joi.string().required(),
+  username: joi.string().lowercase().required(),
+  email: joi.string().email().required(),
+  password: joi.string().min(8).max(16).required()
+});
 
- //login validator
- const teacherLoginValidator = joi.object({
-   email: joi.string().email().required(),
-   password: joi.string().min(8).max(16).required()
- });
+//login validator
+const teacherLoginValidator = joi.object({
+  email: joi.string().email().required(),
+  password: joi.string().min(8).max(16).required()
+});
 
- //verify teacher otp
- const verifyTeacherOtpValidator = joi.object({
-   otp: joi.string().min(6).max(6).required()
- });
+//verify teacher otp
+const verifyTeacherOtpValidator = joi.object({
+  otp: joi.string().min(6).max(6).required()
+});
 
 //resend otp
 const resendTeacherOtp = joi.object({
@@ -38,8 +38,8 @@ const resetTeacherPasswordLinkValidator = joi.object({
 
 // reset password link
 const teacherPasswordlLinkValidator = joi.object({
-    email: joi.string().email().required(),
-    password: joi.string().min(8).max(16).required()
+  email: joi.string().email().required(),
+  password: joi.string().min(8).max(16).required()
 });
 
 //change password
@@ -49,15 +49,15 @@ const changePasswordValidator = joi.object({
   newPassword: joi.string().min(8).max(16).required()
 });
 
-//update teacher
-const updateValidator = joi.object({
-  id: joi.string().required()
-});
-
-//delete teacher
-const deleteValidator = joi.object({
-  id: joi.string().required()
-});
+//update validator
+const updateTeacherValidator = joi.object({
+  surname: joi.string().required(),
+  name: joi.string().required(),
+  subject: joi.string().required(),
+  qualification: joi.string().required(),
+  username: joi.string().required(),
+  email: joi.string().lowercase().email().required()
+})
 
 //upload proile picture
 // const uploadValidator = joi.object({
@@ -90,7 +90,7 @@ const editScoreValidator = joi.object({
 });
 
 //teacher sends email to all student
-const sendEmailToAllValidator = joi.object({ 
+const sendEmailToAllValidator = joi.object({
   email: joi.string().email()
 });
 
@@ -110,19 +110,18 @@ const replyTeacherValidator = joi.object({
 });
 
 
- exports.registerTeacherValidator = validator(registerTeacherValidator)
- exports.teacherLoginValidator = validator(teacherLoginValidator)
- exports.verifyTeacherOtpValidator = validator(verifyTeacherOtpValidator)
- exports.resendTeacherOtp = validator(resendTeacherOtp)
- exports.resetTeacherPasswordLinkValidator = validator(resetTeacherPasswordLinkValidator)
- exports.teacherPasswordlLinkValidator = validator(teacherPasswordlLinkValidator)
- exports.changePasswordValidator = validator(changePasswordValidator)
- exports.updateValidator = validator(updateValidator)
- exports.deleteValidator = validator(deleteValidator)
- exports.sendAssignmentValidator = validator(sendAssignmentValidator)
- exports.uploadScoreValidator = validator(uploadScoreValidator)
- exports.editScoreValidator = validator(editScoreValidator)
- exports.sendEmailToAllValidator = validator(sendEmailToAllValidator)
- exports.sendEmailToOneValidator = validator(sendEmailToOneValidator)
- exports.inboxMessageValidator = validator(inboxMessageValidator)
- exports.replyTeacherValidator = validator(replyTeacherValidator)
+exports.registerTeacherValidator = validator(registerTeacherValidator)
+exports.teacherLoginValidator = validator(teacherLoginValidator)
+exports.verifyTeacherOtpValidator = validator(verifyTeacherOtpValidator)
+exports.resendTeacherOtp = validator(resendTeacherOtp)
+exports.resetTeacherPasswordLinkValidator = validator(resetTeacherPasswordLinkValidator)
+exports.teacherPasswordlLinkValidator = validator(teacherPasswordlLinkValidator)
+exports.changePasswordValidator = validator(changePasswordValidator)
+exports.updateTeacherValidator = validator(updateTeacherValidator)
+exports.sendAssignmentValidator = validator(sendAssignmentValidator)
+exports.uploadScoreValidator = validator(uploadScoreValidator)
+exports.editScoreValidator = validator(editScoreValidator)
+exports.sendEmailToAllValidator = validator(sendEmailToAllValidator)
+exports.sendEmailToOneValidator = validator(sendEmailToOneValidator)
+exports.inboxMessageValidator = validator(inboxMessageValidator)
+exports.replyTeacherValidator = validator(replyTeacherValidator)

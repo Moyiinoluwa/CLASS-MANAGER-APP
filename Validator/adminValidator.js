@@ -48,7 +48,6 @@ const changeAdminPasswordValidator = joi.object({
 const updateAdminValidator = joi.object({
     username: joi.string().required(),
     email: joi.string().email().lowercase().required(),
-    password: joi.string().min(8).max(16).required()
 });
 
 const adminUpdateTeacherValidator = joi.object({

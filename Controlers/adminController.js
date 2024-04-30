@@ -5,6 +5,7 @@ const Admin = require('../Models/adminModel')
 const Adminotp = require('../Models/adminOtpModel')
 const Teacher = require('../Models/teacherModel')
 const Student = require('../Models/studentModel')
+const { v4:uuid } = require('uuid')
 const { loginAdminValidator, registerAdminValidator, verifyAdminOtpValidator, 
     changeAdminPasswordValidator, resendAdminOtpValidator, resetAdminPasswordLinkValidator, 
     sendAdminPasswordValidator, updateAdminValidator, adminUpdateTeacherValidator, adminUpdateStudentValidator } = require('../Validator/adminValidator')
@@ -20,8 +21,23 @@ const generateOtp = () => {
 } 
 
 
+//register a new admin
+/**
+ * @swagger
+ * /api/admin/register
+ * post:
+ * summary: Create a new admin 
+ * description: Create a new admin profile
+ * tags:
+ * - Profile
+ * requestBody:
+ * response:
+ * '200'
+ * description: admin profile created
+ * '400':
+ * description: unable to create admin
+ */
 const registerAdmin = asyncHandler(async(req, res) => {
-    console.log('admin')
     try {
         
         const { error, value } = await registerAdminValidator(req.body, { abortEarly: false }) 
@@ -233,8 +249,11 @@ const resetAdminPasswordLink = asyncHandler(async(req, res) => {
             res.status(404).json({ message: 'email not correct'})
         }
 
-        //generate the link
-        const adminPasswordLink = generateOtp()
+        //generate the token
+        const token = uuid()
+
+        //craft the reset password link
+        const adminPasswordLink = `http://localhost:3002/api/admin/reset-password?token=${token}&email=${email}`
 
         //save link to database
         admin.resetLink = adminPasswordLink
@@ -354,7 +373,6 @@ const updateAdmin = asyncHandler(async(req, res) => {
         //update changes
         admin.username = username
         admin.email = email
-        admin.password = password
 
         //save to database
         await admin.save()

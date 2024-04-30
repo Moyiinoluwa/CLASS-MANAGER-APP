@@ -7,12 +7,13 @@ const Assignment = require('../Models/assignmentModel')
 const Message = require('../Models/messageModel')
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken')
+const { v4: uuidv4 } = require('uuid')
 const { registerTeacherValidator, teacherLoginValidator, verifyTeacherOtpValidator,
     resendTeacherOtp, resetTeacherPasswordLinkValidator, teacherPasswordlLinkValidator,
     changePasswordValidator, uploadScoreValidator, sendEmailToAllValidator,
     sendEmailToOneValidator, replyTeacherValidator, sendAssignmentValidator,
-    editScoreValidator, inboxMessageValidator, } = require('../Validator/teacherValidatorSchema');
-const { verificationMail, verifyOtpMail, passwordResetLinkMail,
+    editScoreValidator, inboxMessageValidator, updateTeacherValidator } = require('../Validator/teacherValidatorSchema');
+const { verificationMail,  passwordResetLinkMail,
     teacherSendMailToStudents, teacherSendMailToAStudent } = require('../Shared/mailer');
 
 
@@ -152,12 +153,7 @@ const verify_Otp = asyncHandler(async (req, res) => {
         }
 
         const { otp } = req.body;
-        //check if the teacher is registered
-        const teacher = await Teachers.findOne({ email })
-        if (!teacher) {
-            res.status(404).json({ message: 'Teacher does not have access' })
-        }
-
+         
         //check if the otp is correct
         const teacherOtp = await teachOtp.findOne({ otp })
         if (!teacherOtp) {
@@ -248,8 +244,11 @@ const resetTeacherPasswordLink = asyncHandler(async (req, res) => {
             res.status(404).json({ message: 'User not registered' })
         }
 
-        //generate password link
-        const setPassword = verifyCode()
+        //generate password token
+        const token = uuidv4()
+
+        //craft reset password link 
+        const setPassword = `http://localhost:3002/api/teachers/reset-link?token=${token}&email=${email}`
 
         //save the password link to the database
         teacher.resetLink = setPassword
@@ -350,7 +349,7 @@ const change_Password = asyncHandler(async (req, res) => {
 //Update teacher information
 const update_Teacher = asyncHandler(async (req, res) => {
     try {
-        const { error, value } = await updateValidator(req.body, { abortEarly: false })
+        const { error, value } = await updateTeacherValidator(req.body, { abortEarly: false })
         if (error) {
             res.status(400).json(error.message)
         }
@@ -386,11 +385,6 @@ const update_Teacher = asyncHandler(async (req, res) => {
 //Delete teacher's account
 const delete_Teacher = asyncHandler(async (req, res) => {
     try {
-
-        const { error, value } = await deleteValidator(req.body, { abortEarly: false })
-        if (error) {
-            res.status(400).json(error.message)
-        }
 
         const { id } = req.params
 
@@ -484,33 +478,33 @@ const downloadAnswer = asyncHandler(async(req, res) => {
 });
 
 
-const sendAssignment = asyncHandler(async (req, res) => {
-    try {
-        const { error, value } = await sendAssignmentValidator(req.body, { abortEarly: false })
-        if (error) {
-            res.status(400).json(error.message)
-        }
+// const sendAssignment = asyncHandler(async (req, res) => {
+//     try {
+//         const { error, value } = await sendAssignmentValidator(req.body, { abortEarly: false })
+//         if (error) {
+//             res.status(400).json(error.message)
+//         }
 
-        const { id } = req.params
+//         const { id } = req.params
 
-        const { klass, subject, assignment, student_id } = req.body
+//         const { klass, subject, assignment, student_id } = req.body
 
-        //create new assignment
-        const assignments = new Assignment({
-            klass,
-            subject,
-            assignment,
-            student_id
-        })
+//         //create new assignment
+//         const assignments = new Assignment({
+//             klass,
+//             subject,
+//             assignment,
+//             student_id
+//         })
 
-        await assignments.save()
+//         await assignments.save()
 
-        res.status(200).json(assignments)
+//         res.status(200).json(assignments)
 
-    } catch (error) {
-        throw error
-    }
-});
+//     } catch (error) {
+//         throw error
+//     }
+// });
 
 
 //Teacher uploads each students score
@@ -537,7 +531,8 @@ const uploadStudentScore = asyncHandler(async (req, res) => {
             klass,
             student_id,
             subject,
-            assignment
+            assignment,
+            score
         });
 
         //save to database
@@ -783,5 +778,5 @@ module.exports = {
     replyTeacher,
     // messageStudent,
     downloadAnswer,
-    sendAssignment,
+    //sendAssignment,
 }

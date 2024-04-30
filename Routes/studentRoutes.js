@@ -41,8 +41,8 @@ router.delete('/delete/:id', validate, Controller.deleteStudent )
 //upload profile picture
 router.patch('/upload/:id', upload, validate, Controller.profilePic)
 
-//student can view their score
-router.get('/view-score', validate, Controller.studentScore)
+//student can check their score
+router.get('/check-score', validate, Controller.studentScore)
 
 //send message to teacher
 router.post('/message-teacher/:student_id/:teacher_id', validate, Controller.messageTeacher)

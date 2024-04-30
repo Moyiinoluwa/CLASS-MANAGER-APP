@@ -7,12 +7,12 @@ const jwt = require('jsonwebtoken')
 const Assignment = require('../Models/assignmentModel')
 const Teachers = require('../Models/teacherModel')
 const Message = require('../Models/messageModel')
+const { v4:uuidv4 } = require('uuid')
 const { signupValidator, loginValidator, verifyOtpValidator,
     resendOtpValidator, resetPasswordLinkValidator, setPasswordValidator,
     changePasswordValidator, updateStudentValidator, messageStudentVaildator, messageTeacherVaildator,
     studentScoreValidator, studentSearchValidator } = require('../Validator/validatorSchema')
-const { verificationMail, verifyOtpMail, passwordResetLinkMail } = require('../Shared/mailer')
-
+const { verificationMail,  passwordResetLinkMail } = require('../Shared/mailer')
 
 //Generate OTP code
 const generateOtp = () => {
@@ -144,7 +144,6 @@ const verifyOtp = asyncHandler(async (req, res) => {
             res.status(400).json(error.message)
         }
 
-        //check if the email match the email the otp was sent to
         const { otp } = req.body;
 
         //check if otp is correct 
@@ -169,9 +168,6 @@ const verifyOtp = asyncHandler(async (req, res) => {
 
         //save to database
         await studentOtp.save()
-
-        //send a verification mail to the user
-        await verifyOtpMail(studentEmail.email)
 
         res.status(200).json({ message: 'otp verified' })
 
@@ -240,12 +236,20 @@ const resetPasswordLink = asyncHandler(async (req, res) => {
             res.status(404).json({ message: 'email not registered' })
         }
 
+        //generate token
+        const token = uuidv4()
+
+        //set expiration time for link
+        const expirationLink = new Date()
+        expirationLink.setMinutes(expirationLink.getMinutes() + 5)
+
         //generate new password link
-        const newLink = generateOtp()
+        const newLink = `http://localhost:3002/api/students/reset-password?token=${token}&email=${email}`
 
         //save the password reset link in the database
         passMail.reSetLink = newLink;
         passMail.isResetPasswordLinkSent = true
+        passMail.resentLinkExpirationTime = expirationLink
 
         //save changes to student database
         await passMail.save()
@@ -262,7 +266,7 @@ const resetPasswordLink = asyncHandler(async (req, res) => {
 });
 
 
-//Veriy Link to reset password
+//Verify Link to reset password
 const resetPassword = asyncHandler(async (req, res) => {
     try {
         const { error, value } = await setPasswordValidator(req.body, { abortEarly: false })
@@ -280,7 +284,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 
         //validate the link sent
         if (student.resetLink !== resetLink) {
-            res.status(404).jaon({ message: 'wrong reset link' })
+            res.status(404).json({ message: 'wrong reset link' })
         }
 
         //set expiration time for the link
@@ -421,83 +425,6 @@ const profilePic = asyncHandler(async (req, res) => {
     }
 });
 
-//The student downloads the assignment file.
-const downloadAssignment = asyncHandler(async (req, res) => {
-    try {
-
-        const { id } = req.params
-
-        //if student is registered
-        const student = await Student.findById(id)
-        if (!student) {
-            res.status(404).json({ message: 'student cant download' })
-        }
-
-        //student gets the file path or url of the assigment from their pofile
-        const assignmentUrl = student.assignment
-
-        //the folder the assignment will be downloaded to
-        //const assigmentPath = `${__dirname}/downloadedAssignment`
-
-       // await download(assignmentUrl, assigmentPath)
-
-        res.status(200).json({ 
-            message: 'Assignment downloaded successfully',
-            downloadURL:  `http://locahost:3002/Assignment/${assignmentUrl}`
-        })
-         
-
-    } catch (error) {
-        throw error
-    }
-});
-
-//student uploads the answer to the assignment
-const uploadAnswer = asyncHandler(async (req, res) => {
-    try {
-
-        const { id } = req.params
-
-        const student = await Student.findById(id)
-        if (!student) {
-            res.status(404).json({ message: 'student cant upload answer' })
-        }
-
-        const answerQuestion = req.file.filename
-        student.answer = answerQuestion
-
-        await student.save()
-
-        res.status(200).json({ message: 'answer uploaded' })
-
-    } catch (error) {
-        throw error
-    }
-});
-
-//sumbit student assignment just once
-const sumbitAssignment = asyncHandler(async (req, res) => {
-    try {
-        const { error, value } = await sumbitAssignmentValidator(req.body, { abortEarly: false })
-        if (error) {
-            res.status(400).json(error.message)
-        }
-
-        const { suject } = req.body
-
-        const student = await Student.findById(id)
-        //check if student exists
-        if (!student) {
-            res.status(404).json({ message: 'not student' })
-        }
-
-
-
-    } catch (error) {
-        throw error
-    }
-})
-
 
 // Students can see the marks they got
 const studentScore = asyncHandler(async (req, res) => {
@@ -518,11 +445,10 @@ const studentScore = asyncHandler(async (req, res) => {
         }
 
         //student view score on profile
-
-        student.score = student.score
+        student.score = score
         student.subject = subject
 
-        res.status(200).json({ message: 'score viewed' })
+        res.status(200).json({ score: student.score })
 
     } catch (error) {
         throw error
@@ -657,6 +583,59 @@ const studentSearch = asyncHandler(async (req, res) => {
     }
 });
 
+//The student downloads the assignment file.
+const downloadAssignment = asyncHandler(async (req, res) => {
+    try {
+
+        const { id } = req.params
+
+        //if student is registered
+        const student = await Student.findById(id)
+        if (!student) {
+            res.status(404).json({ message: 'student cant download' })
+        }
+
+        //student gets the file path or url of the assigment from their pofile
+        const assignmentUrl = student.assignment
+
+        //the folder the assignment will be downloaded to
+        //const assigmentPath = `${__dirname}/downloadedAssignment`
+
+       // await download(assignmentUrl, assigmentPath)
+
+        res.status(200).json({ 
+            message: 'Assignment downloaded successfully',
+            downloadURL:  `http://locahost:3002/Assignment/${assignmentUrl}`
+        })
+         
+    } catch (error) {
+        throw error
+    }
+});
+
+
+//student uploads the answer to the assignment
+const uploadAnswer = asyncHandler(async (req, res) => {
+    try {
+
+        const { id } = req.params
+
+        const student = await Student.findById(id)
+        if (!student) {
+            res.status(404).json({ message: 'student cant upload answer' })
+        }
+
+        const answerQuestion = req.file.filename
+        student.answer = answerQuestion
+
+        await student.save()
+
+        res.status(200).json({ message: 'answer uploaded' })
+
+    } catch (error) {
+        throw error
+    }
+});
 
 
 

@@ -43,7 +43,7 @@ router.delete('/delete/:id', validate, Controller.delete_Teacher)
 router.post('/upload/:id', upload, validate, Controller.uploadPics)
 
 //teacher sends assignment
-router.post('/send-assignment/:id', validate, Controller.sendAssignment)
+//router.post('/send-assignment/:id', validate, Controller.sendAssignment)
 
 //teacher uploads assignment 
 router.post('/upload-assignment/:id', validate, uploadAssignment, Controller.uploadAssignment )
