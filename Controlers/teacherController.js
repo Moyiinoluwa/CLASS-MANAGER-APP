@@ -28,12 +28,49 @@ const verifyCode = () => {
 }
 
 //Get all tecahers
+/**
+ * @swagger
+ * /api/teachers/get:
+ *   get:
+ *     tags:
+ *       - Teacher
+ *     summary: Get all teachers
+ *     description: Retrieve all teachers
+ *     responses:
+ *       '200':
+ *         description: Teachers retrieved successfully
+ *       '404':
+ *         description: No teachers found
+ */
+
 const get_Teacher = asyncHandler(async (req, res) => {
     const teacher = await Teachers.find()
     res.status(200).json(teacher)
 });
 
 //Get teacher by id
+/**
+ * @swagger
+ * /api/teachers/get/{id}:
+ *   get:
+ *     tags:
+ *       - Teacher
+ *     summary: Get a teacher by ID
+ *     description: Retrieve a teacher by their ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the teacher to retrieve
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Teacher retrieved successfully
+ *       '400':
+ *         description: Teacher not found
+ */
+
 const get_Teacher_Id = asyncHandler(async (req, res) => {
     try {
         const teacher = await Teachers.findById(req.params.id)
@@ -48,6 +85,44 @@ const get_Teacher_Id = asyncHandler(async (req, res) => {
 });
 
 //Register new teacher
+/**
+ * @swagger
+ * /api/teachers/register:
+ *   post:
+ *     tags:
+ *       - Teacher
+ *     summary: Register a new teacher
+ *     description: Register a new teacher account
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               surname:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *               subject:
+ *                 type: string
+ *               qualification:
+ *                 type: string
+ *               username:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 format: password
+ *     responses:
+ *       '200':
+ *         description: Teacher registered successfully
+ *       '403':
+ *         description: Teacher has already been registered
+ */
+
 const register_Teacher = asyncHandler(async (req, res) => {
     try {
         //validate the input
@@ -107,6 +182,34 @@ const register_Teacher = asyncHandler(async (req, res) => {
 });
 
 //login teacher
+/**
+ * @swagger
+ * /api/teachers/login:
+ *   post:
+ *     tags:
+ *       - Teacher
+ *     summary: Login for teachers
+ *     description: Login for registered teachers
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 format: password
+ *     responses:
+ *       '200':
+ *         description: Successful login, returns access token
+ *       '404':
+ *         description: Teacher is not registered
+ */
+
 const login_Teacher = asyncHandler(async (req, res) => {
     try {
         //validate the teacher input
@@ -145,6 +248,32 @@ const login_Teacher = asyncHandler(async (req, res) => {
 });
 
 //verify Otp
+/**
+ * @swagger
+ * /api/teachers/verify-otp:
+ *   post:
+ *     tags:
+ *       - Teacher
+ *     summary: Verify OTP for teacher registration
+ *     description: Verify the OTP sent to a teacher's email for registration
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               otp:
+ *                 type: string
+ *     responses:
+ *       '200':
+ *         description: OTP verified successfully
+ *       '404':
+ *         description: OTP is not correct or email associated with OTP not found
+ *       '403':
+ *         description: OTP has expired
+ */
+
 const verify_Otp = asyncHandler(async (req, res) => {
     try {
         const { error, value } = await verifyTeacherOtpValidator(req.body, { abortEarly: false })
@@ -160,6 +289,10 @@ const verify_Otp = asyncHandler(async (req, res) => {
             res.status(404).json({ message: 'Otp is not correct' })
         }
 
+        //Set the expiration time for the verification code
+        const expirationTime = new Date()
+        expirationTime.setMinutes(expirationTime.getMinutes() + 5)
+
         // Check if the otp has expired
         if (teacherOtp.expirationTime <= new Date()) {
             res.status(403).json({ message: 'Otp has expired, try again' })
@@ -173,9 +306,10 @@ const verify_Otp = asyncHandler(async (req, res) => {
 
         //verify teacher otp
         teacherOtp.isVerified = true
+        teacherOtp.expirationTime = expirationTime
 
-        //send verification mail to the teacher
-        await verifyOtpMail(teacher.username)
+        //save otp to database
+        await teacherOtp.save()
 
         res.status(200).json({ message: 'Otp verified' })
     } catch (error) {
@@ -185,6 +319,31 @@ const verify_Otp = asyncHandler(async (req, res) => {
 
 
 //resend otp
+/**
+ * @swagger
+ * /api/teachers/resend-otp:
+ *   post:
+ *     tags:
+ *       - Teacher
+ *     summary: Resend OTP
+ *     description: Resend OTP to a registered teacher's email address.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       '200':
+ *         description: New OTP sent successfully
+ *       '404':
+ *         description: Not Found
+ */
+
 const resend_Otp = asyncHandler(async (req, res) => {
     try {
         // valaidate teacher input
@@ -228,6 +387,31 @@ const resend_Otp = asyncHandler(async (req, res) => {
 });
 
 //reset password link
+/**
+ * @swagger
+ * /api/teachers/reset-password-link:
+ *   post:
+ *     tags:
+ *       - Teacher
+ *     summary: Reset Password Link
+ *     description: Reset the password for a registered teacher and send a password reset link via email.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       '200':
+ *         description: Password reset link sent successfully
+ *       '404':
+ *         description: Not Found
+ */
+
 const resetTeacherPasswordLink = asyncHandler(async (req, res) => {
     try {
         //valiadate input
@@ -268,6 +452,36 @@ const resetTeacherPasswordLink = asyncHandler(async (req, res) => {
 });
 
 // reset password
+/**
+ * @swagger
+ * /api/teachers/reset-password:
+ *   post:
+ *     tags:
+ *       - Teacher
+ *     summary: Reset Password
+ *     description: Reset the password for a registered teacher using a password reset link.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *               resetLink:
+ *                 type: string
+ *     responses:
+ *       '200':
+ *         description: Password reset successful
+ *       '404':
+ *         description: Teacher Not Found
+
+ */
+
 const reset_Password = asyncHandler(async (req, res) => {
     try {
         const { error, value } = await teacherPasswordlLinkValidator(req.body, { abortEarly: false })
@@ -310,6 +524,35 @@ const reset_Password = asyncHandler(async (req, res) => {
 });
 
 //change password
+/**
+ * @swagger
+ * /api/teachers/change-password:
+ *   patch:
+ *     tags:
+ *       - Teacher
+ *     summary: Change Password
+ *     description: Change the password for a registered teacher.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               oldPassword:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *     responses:
+ *       '200':
+ *         description: Password changed successfully
+ *       '404':
+ *         description: Not Found
+ */
+
 const change_Password = asyncHandler(async (req, res) => {
     try {
         //validate the input
@@ -347,6 +590,48 @@ const change_Password = asyncHandler(async (req, res) => {
 });
 
 //Update teacher information
+/**
+ * @swagger
+ * /api/teachers/update/{id}:
+ *   put:
+ *     tags:
+ *       - Teacher
+ *     summary: Update Teacher
+ *     description: Update information for a registered teacher.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the teacher to update.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               surname:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *               username:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               qualification:
+ *                 type: string
+ *               subject:
+ *                 type: string
+ *     responses:
+ *       '200':
+ *         description: Teacher updated successfully
+ *       '404':
+ *         description: Teacher profile not found
+ */
+
 const update_Teacher = asyncHandler(async (req, res) => {
     try {
         const { error, value } = await updateTeacherValidator(req.body, { abortEarly: false })
@@ -383,6 +668,28 @@ const update_Teacher = asyncHandler(async (req, res) => {
 });
 
 //Delete teacher's account
+/**
+ * @swagger
+ * /api/teachers/delete/{id}:
+ *   delete:
+ *     tags:
+ *       - Teacher
+ *     summary: Delete Teacher
+ *     description: Delete a registered teacher.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Id of the teacher to delete.
+ *     responses:
+ *       '200':
+ *         description: Teacher deleted successfully
+ *       '404':
+ *         description:  Teacher profile Not Found
+ */
+
 const delete_Teacher = asyncHandler(async (req, res) => {
     try {
 
@@ -404,6 +711,38 @@ const delete_Teacher = asyncHandler(async (req, res) => {
 
 
 // upload profile picture
+/**
+ * @swagger
+ * /api/teachers/upload/{id}:
+ *   post:
+ *     tags:
+ *       - Teacher
+ *     summary: Upload profile Picture
+ *     description: Upload a profile picture for a registered teacher.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the teacher to upload the picture for.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       '200':
+ *         description: Picture uploaded successfully
+ *       '404':
+ *         description: Not Found
+ */
+
 const uploadPics = asyncHandler(async (req, res) => {
     try {
 
@@ -427,6 +766,39 @@ const uploadPics = asyncHandler(async (req, res) => {
         throw error
     }
 });
+
+//upload assignment for student
+/**
+ * @swagger
+ * /api/teachers/upload-assignment{id}:
+ *   post:
+ *     tags:
+ *       - Teacher
+ *     summary: Upload Assignment
+ *     description: Upload an assignment for a registered student.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the student to upload the assignment for.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       '200':
+ *         description: Assignment uploaded successfully
+ *       '404':
+ *         description: Not Found
+ */
 
 const uploadAssignment = asyncHandler(async (req, res) => {
     try {
@@ -452,6 +824,28 @@ const uploadAssignment = asyncHandler(async (req, res) => {
 
 
 //The teacher retrieves the student's answer file path or URL and downloads the answer file.
+/**
+ * @swagger
+ * /api/teachers/download-answer{id}:
+ *   get:
+ *     tags:
+ *       - Teacher
+ *     summary: Download Answer
+ *     description: Download the answer submitted by a registered student.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the student to download the answer for.
+ *     responses:
+ *       '200':
+ *         description: Answer downloaded successfully
+ *       '404':
+ *         description: Not Found
+ */
+
 const downloadAnswer = asyncHandler(async(req, res) => {
     try {
         
@@ -508,6 +902,45 @@ const downloadAnswer = asyncHandler(async(req, res) => {
 
 
 //Teacher uploads each students score
+/**
+ * @swagger
+ * /api/teachers/upload-score/{id}:
+ *   post:
+ *     tags:
+ *       - Teacher
+ *     summary: Upload Student Score
+ *     description: Upload scores for a registered student.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the student to upload scores for.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               student_id:
+ *                 type: string
+ *               klass:
+ *                 type: string
+ *               subject:
+ *                 type: string
+ *               assignment:
+ *                 type: string
+ *               score:
+ *                 type: number
+ *     responses:
+ *       '200':
+ *         description: Student score uploaded successfully
+ *       '404':
+ *         description: Not Found
+ */
+
 const uploadStudentScore = asyncHandler(async (req, res) => {
     try {
 
@@ -547,41 +980,91 @@ const uploadStudentScore = asyncHandler(async (req, res) => {
 
 
 // Edit student's score
+/**
+ * @swagger
+ * /api/teacher/edit-score/{id}:
+ *   put:
+ *     tags:
+ *       - Teacher
+ *     summary: Edit Student Score
+ *     description: Edit the score of a registered student.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the student to edit the score for.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               klass:
+ *                 type: string
+ *               student_id:
+ *                 type: string
+ *               subject:
+ *                 type: string
+ *               score:
+ *                 type: number
+ *     responses:
+ *       '200':
+ *         description: Student score updated successfully
+ *       '404':
+ *         description: Not Found
+ */
+
 const editStudentScore = asyncHandler(async (req, res) => {
     try {
-
         const { error, value } = await editScoreValidator(req.body, { abortEarly: false })
         if (error) {
             res.status(400).json(error.message)
         }
 
-        const { id } = req.params
+        const { id } = req.params;
+        const { klass, student_id, subject, score } = req.body;
 
-        const { klass, student_id, subject, score, } = req.body;
-
-        //if the student is registered
-        const student = await students.findById(id)
-        if (student) {
-            res.status(404).json({ message: 'non student' })
+        // Find the student by id
+        const student = await students.findById(id);
+        if (!student) {
+            res.status(404).json({ message: 'Student not found' });
         }
 
-        //update score
-        student.score = score
-        student.klass = klass
-        student.subject = subject
-        student.student_id = student_id
+        // Update the student's score
+        student.score = score;
+        student.klass = klass;
+        student.subject = subject;
+        student.student_id = student_id;
 
-        //save to database 
-        await student.save()
+        // Save changes to the database 
+        await student.save();
 
-        res.status(200).json({ message: 'student score updated' })
-
+        res.status(200).json({ message: 'Student score updated' });
     } catch (error) {
-        throw error
+        throw error;
     }
 });
 
+
 //Teacher sends mail to all students
+/**
+ * @swagger
+ * /api/teachers/send-email-to-all:
+ *   post:
+ *     tags:
+ *       - Teacher
+ *     summary: Send Email to All Students
+ *     description: Send an email to all registered students.
+ *     responses:
+ *       '200':
+ *         description: Email sent to all students successfully
+ *       '404':
+ *         description:students email Not Found
+ */
+
 const sendEmailToAll = asyncHandler(async (req, res) => {
     try {
 
@@ -613,6 +1096,28 @@ const sendEmailToAll = asyncHandler(async (req, res) => {
 });
 
 //Teacher sends email to a student
+/**
+ * @swagger
+ * /api/teacher/send-email/{id}:
+ *   post:
+ *     tags:
+ *       - Teacher
+ *     summary: Send Email to One Student
+ *     description: Send an email to a specific student.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the student to send the email to.
+ *     responses:
+ *       '200':
+ *         description: Email sent to the student successfully
+ *       '404':
+ *         description: Student not found
+ */
+
 const sendEmailToOne = asyncHandler(async (req, res) => {
     try {
 
@@ -641,7 +1146,44 @@ const sendEmailToOne = asyncHandler(async (req, res) => {
 });
 
 
-//Teacher receives students message in the inbox
+//Teacher receives students message 
+/**
+ * @swagger
+ * /api/teachers/send-message/{student_id}/{teacher_id}:
+ *   post:
+ *     tags:
+ *       - Teacher
+ *     summary: Send Message to Teacher
+ *     description: Send a message from a student to a teacher.
+ *     parameters:
+ *       - in: path
+ *         name: student_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the student sending the message.
+ *       - in: path
+ *         name: teacher_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the teacher receiving the message.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               message:
+ *                 type: string
+ *     responses:
+ *       '200':
+ *         description: Message received successfully
+ *       '404':
+ *         description: Student or teacher not found
+ */
+
 const inboxMessage = asyncHandler(async (req, res) => {
     try {
 
@@ -681,7 +1223,44 @@ const inboxMessage = asyncHandler(async (req, res) => {
     }
 });
 
-//Teacher can send message to each other
+//Teachers can send message to each other
+/**
+ * @swagger
+ * /api/teachers/reply-teacher/{sender_id}/{receiver_id}:
+ *   post:
+ *     tags:
+ *       - Teacher
+ *     summary: Reply to Teacher
+ *     description: Reply to a message from one teacher to another teacher.
+ *     parameters:
+ *       - in: path
+ *         name: sender_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the teacher sending the reply.
+ *       - in: path
+ *         name: receiver_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the teacher receiving the reply.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               message:
+ *                 type: string
+ *     responses:
+ *       '200':
+ *         description: Reply sent successfully
+ *       '404':
+ *         description: Sender or receiver teacher not found
+ */
+
 const replyTeacher = asyncHandler(async (req, res) => {
     try {
 

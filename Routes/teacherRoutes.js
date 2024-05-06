@@ -55,7 +55,7 @@ router.get('/download-answer/:id', validate, Controller.downloadAnswer)
 router.post('/upload-score/:id', validate, Controller.uploadStudentScore)
 
 //Edit student score
-router.patch('/update-score/:id', validate, Controller.editStudentScore)
+router.put('/update-score/:id', validate, Controller.editStudentScore)
 
 //Teacher sends mail to all student
 router.post('/send-mails', validate, Controller.sendEmailToAll)

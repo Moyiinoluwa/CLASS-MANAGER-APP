@@ -22,14 +22,52 @@ const generateOtp = () => {
     return otp;
 }
 
+/**
+ * @swagger
+ * /api/students/get:
+ *   get:
+ *     summary: Get all students
+ *     description: Get all registered students
+ *     tags:
+ *       - Student
+ *     responses:
+ *       '200':
+ *         description: All students
+ *       '404':
+ *         description: No student found
+ */
+
 // Get all students
 const getStudent = asyncHandler(async (req, res) => {
     //find all registered students
     const student = await Student.find()
+
     res.status(200).json(student)
 });
 
 //Get a student
+/**
+ * @swagger
+ * /api/students/get/{id}:
+ *   get:
+ *     summary: Get a student profile
+ *     description: Get a particular student profile
+ *     tags:
+ *       - Student
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Id of the student to retrieve
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Student profile
+ *       '404':
+ *         description: Student not found
+ */
+
 const getStudentId = asyncHandler(async (req, res) => {
     //find the id in the database
     const user = await Student.findById(req.params.id)
@@ -43,6 +81,40 @@ const getStudentId = asyncHandler(async (req, res) => {
 });
 
 //Register a new student
+/**
+ * @swagger
+ * /api/students/register:
+ *   post:
+ *     summary: Create a new account
+ *     description: Create a new student account
+ *     tags:
+ *       - Student
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               surname:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *               username:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 format: password
+ *     responses:
+ *       '200':
+ *         description: Student registered
+ *       '403':
+ *         description: Student already exists
+ */
+
 const registerStudent = asyncHandler(async (req, res) => {
     try {
         //validate student input
@@ -98,6 +170,32 @@ const registerStudent = asyncHandler(async (req, res) => {
 });
 
 //student login
+/**
+ * @swagger
+ * /api/students/login:
+ *   post:
+ *     summary: Student login
+ *     description: Student logs in to a registered account
+ *     tags:
+ *       - Student
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       '200':
+ *         description: Login successful
+ *       '404':
+ *         description: Student has not been registered
+ */
+
 const loginStudent = asyncHandler(async (req, res) => {
     try {
         // validate input
@@ -136,6 +234,30 @@ const loginStudent = asyncHandler(async (req, res) => {
 })
 
 //verify otp
+/**
+ * @swagger
+ * /api/students/verify-otp:
+ *   post:
+ *     summary: Verify student OTP
+ *     description: Verify registration OTP
+ *     tags:
+ *       - Student
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               otp:
+ *                 type: string
+ *     responses:
+ *       '200':
+ *         description: OTP verified
+ *       '401':
+ *         description: Incorrect OTP
+ */
+
 const verifyOtp = asyncHandler(async (req, res) => {
     try {
         //validate the input
@@ -177,6 +299,31 @@ const verifyOtp = asyncHandler(async (req, res) => {
 });
 
 //resend otp
+/**
+ * @swagger
+ * /api/students/resend-otp:
+ *   post:
+ *     tags:
+ *       - Student
+ *     summary: Resend OTP
+ *     description: Resend OTP to the student's email
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       '200':
+ *         description: New OTP sent
+ *       '404':
+ *         description: Incorrect email
+ */
+
 const resendOtp = asyncHandler(async (req, res) => {
     try {
         //validate input
@@ -220,6 +367,31 @@ const resendOtp = asyncHandler(async (req, res) => {
 });
 
 //send reset password
+/**
+ * @swagger
+ * /api/students/reset-password-link:
+ *   post:
+ *     tags:
+ *       - Student
+ *     summary: Send reset password link
+ *     description: Send reset password link to the student's email
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       '200':
+ *         description: Reset password link sent
+ *       '404':
+ *         description: Student not registered
+ */
+
 const resetPasswordLink = asyncHandler(async (req, res) => {
     try {
         //validate the input
@@ -267,6 +439,36 @@ const resetPasswordLink = asyncHandler(async (req, res) => {
 
 
 //Verify Link to reset password
+/**
+ * @swagger
+ * /api/students/reset-password:
+ *   post:
+ *     tags:
+ *       - Student
+ *     summary: Reset password
+ *     description: Reset student's password using the reset link
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 format: password
+ *               resetLink:
+ *                 type: string
+ *     responses:
+ *       '200':
+ *         description: Password reset successfully
+ *       '404':
+ *         description: Unregistered email or wrong reset link
+ */
+
 const resetPassword = asyncHandler(async (req, res) => {
     try {
         const { error, value } = await setPasswordValidator(req.body, { abortEarly: false })
@@ -306,10 +508,39 @@ const resetPassword = asyncHandler(async (req, res) => {
     } catch (error) {
         throw error
     }
-})
+});
 
 
 //change password
+/**
+ * @swagger
+ * /api/students/change-password:
+ *   patch:
+ *     tags:
+ *       - Student
+ *     summary: Change password
+ *     description: Student changes password
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               oldPassword:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *     responses:
+ *       '200':
+ *         description: Password changed
+ *       '400':
+ *         description: Incorrect password
+ */
+
 const changePassword = asyncHandler(async (req, res) => {
     try {
         const { error, value } = await changePasswordValidator(req.body, { abortEarly: false })
@@ -347,7 +578,45 @@ const changePassword = asyncHandler(async (req, res) => {
     }
 });
 
-//Update student record
+//Update student profile
+/**
+ * @swagger
+ * /api/students/update/{id}:
+ *   put:
+ *     tags:
+ *       - Student
+ *     summary: Update student
+ *     description: Update student details
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Id of the student to update
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               name:
+ *                 type: string
+ *               surname:
+ *                 type: string
+ *     responses:
+ *       '200':
+ *         description: Student updated
+ *       '404':
+ *         description: Incorrect student details
+ */
+
 const updateStudent = asyncHandler(async (req, res) => {
     try {
         const { error, value } = await updateStudentValidator(req.body, { abortEarly: false })
@@ -381,7 +650,28 @@ const updateStudent = asyncHandler(async (req, res) => {
     }
 });
 
-//Delete student
+/**
+ * @swagger
+ * /api/students/delete/{id}:
+ *   delete:
+ *     tags:
+ *       - Student
+ *     summary: Delete student profile
+ *     description: Delete student profile
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Id of the student to delete
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Student account deleted
+ *       '400':
+ *         description: Student account not deleted
+ */
+
 const deleteStudent = asyncHandler(async (req, res) => {
     try {
         const { id } = req.params
@@ -399,26 +689,47 @@ const deleteStudent = asyncHandler(async (req, res) => {
 });
 
 //upload student profile picture
+/**
+ * @swagger
+ * /api/students/upload/{id}:
+ *   patch:
+ *     summary: Students upload profile picture
+ *     description: Endpoint for students to upload profile picture
+ *     tags:
+ *       - Student
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the student who wants to upload a profile picture
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Profile picture uploaded
+ *       '400':
+ *         description: Profile picture not uploaded
+ */
 const profilePic = asyncHandler(async (req, res) => {
     try {
         const { id } = req.params
 
-        //check if student is registered
+        // Check if student is registered
         const student = await Student.findById(id)
         if (!student) {
-            res.status(404).json({ message: 'student error' })
+            res.status(404).json({ message: 'Student not found' })
         }
 
-        //get the file name of the uploaded picture
+        // Get the file name of the uploaded picture
         const image = req.file.filename
 
-        //update the student profile picture property
+        // Update the student's profile picture property
         student.profilePicture = image
 
-        //save to database 
+        // Save to database 
         await student.save()
 
-        res.status(200).json({ message: 'profile picture uploaded' })
+        res.status(200).json({ message: 'Profile picture uploaded' })
 
     } catch (error) {
         throw error
@@ -427,35 +738,99 @@ const profilePic = asyncHandler(async (req, res) => {
 
 
 // Students can see the marks they got
+/**
+ * @swagger
+ * /api/students/check-score:
+ *   get:
+ *     tags:
+ *       - Student
+ *     summary: Student checks their score
+ *     description: Students can check their score for each subject
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         required: true
+ *         description: ID of the student who wants to check their score
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: subject
+ *         required: true
+ *         description: Subject for which the student wants to check the score
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Score
+ *       '404':
+ *         description: Cannot view score
+ */
 const studentScore = asyncHandler(async (req, res) => {
     try {
-        const { error, value } = await studentScoreValidator(req.body, { abortEarly: false })
+        const { error, value } = await studentScoreValidator(req.query, { abortEarly: false })
         if (error) {
             res.status(400).json(error.message)
         }
 
-        const { id } = req.params
+        const { id, subject } = req.query;
 
-        const { subject } = req.body;
-
-        //check if student is registered
+        // Check if student is registered
         const student = await Student.findById(id)
         if (!student) {
-            res.status(404).json({ message: 'student cant see score' })
+            res.status(404).json({ message: 'Student cannot view score' })
+            return;
         }
 
-        //student view score on profile
-        student.score = score
-        student.subject = subject
+        // Student views score on profile
+        const score = student.score; 
 
-        res.status(200).json({ score: student.score })
+        res.status(200).json({ score })
 
     } catch (error) {
         throw error
     }
 });
 
+
 //Students can see the list of the teachers and can message them
+/**
+ * @swagger
+ * /api/students/message-teacher/{student_id}/{teacher_id}:
+ *   post:
+ *     tags:
+ *       - Student
+ *     summary: Send a message to a teacher
+ *     description: Send a message from a student to a teacher
+ *     parameters:
+ *       - in: path
+ *         name: student_id
+ *         required: true
+ *         description: ID of the student sending the message
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: teacher_id
+ *         required: true
+ *         description: ID of the teacher receiving the message
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               message:
+ *                 type: string
+ *                 description: The message content
+ *     responses:
+ *       '200':
+ *         description: Message sent to teacher
+ *       '404':
+ *         description: Student or teacher not found
+ */
+
 const messageTeacher = asyncHandler(async (req, res) => {
     try {
 
@@ -497,6 +872,46 @@ const messageTeacher = asyncHandler(async (req, res) => {
 });
 
 //student can message each other
+/**
+ * @swagger
+ * /api/students/message-student/{sender_id}/{receiver_id}:
+ *   post:
+ *     tags:
+ *       - Student
+ *     summary: Send a message to another student
+ *     description: Send a message from one student to another student
+ *     parameters:
+ *       - in: path
+ *         name: sender_id
+ *         required: true
+ *         description: ID of the student sending the message
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: receiver_id
+ *         required: true
+ *         description: ID of the student receiving the message
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               message:
+ *                 type: string
+ *                 description: The message content
+ *     responses:
+ *       '200':
+ *         description: Message sent to student
+ *       '400':
+ *         description: Bad request, invalid parameters
+ *       '404':
+ *         description: Sender or receiver student not found
+ */
+
 const messageStudent = asyncHandler(async (req, res) => {
     try {
 
@@ -535,7 +950,30 @@ const messageStudent = asyncHandler(async (req, res) => {
         throw error
     }
 });
+
 //Student can see list of students and view their profile
+/**
+ * @swagger
+ * /api/students/view-profile:
+ *   get:
+ *     tags:
+ *       - Student
+ *     summary: View a student's profile
+ *     description: Retrieve the profile of a specific student by their ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the student whose profile needs to be viewed
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Student profile retrieved successfully
+ *       '404':
+ *         description: Student profile not found
+ */
+
 const viewStudentProfile = asyncHandler(async (req, res) => {
     try {
 
@@ -560,6 +998,31 @@ const viewStudentProfile = asyncHandler(async (req, res) => {
 
 
 //student can search for each other
+/**
+ * @swagger
+ * /api/students/student-page:
+ *   post:
+ *     tags:
+ *       - Student
+ *     summary: Search for a student by username
+ *     description: Search for a student by their username
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: The username of the student to search for
+ *     responses:
+ *       '200':
+ *         description: Student found
+ *       '400':
+ *         description: Student not found
+ */
+
 const studentSearch = asyncHandler(async (req, res) => {
     try {
         //validate the input
@@ -584,6 +1047,40 @@ const studentSearch = asyncHandler(async (req, res) => {
 });
 
 //The student downloads the assignment file.
+/**
+ * @swagger
+ * /api/students/download-assignment/{id}:
+ *   get:
+ *     tags:
+ *       - Student
+ *     summary: Download assignment
+ *     description: Download assignment for a specific student by their ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the student who wants to download the assignment
+ *         schema:
+ *           type: string
+ *     responses:
+ *       '200':
+ *         description: Assignment downloaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Confirmation message
+ *                 downloadURL:
+ *                   type: string
+ *                   format: uri
+ *                   description: URL to download the assignment
+ *       '404':
+ *         description: Student not found, assignment cannot be downloaded
+ */
+
 const downloadAssignment = asyncHandler(async (req, res) => {
     try {
 
@@ -615,6 +1112,39 @@ const downloadAssignment = asyncHandler(async (req, res) => {
 
 
 //student uploads the answer to the assignment
+/**
+ * @swagger
+ * /api/students/upload-answer/{id}:
+ *   post:
+ *     tags:
+ *       - Student
+ *     summary: Upload answer
+ *     description: Upload answer for a specific student by their ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID of the student who wants to upload the answer
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: The answer file to upload
+ *     responses:
+ *       '200':
+ *         description: Answer uploaded successfully
+ *       '404':
+ *         description: Student not found, answer cannot be uploaded
+ */
+
 const uploadAnswer = asyncHandler(async (req, res) => {
     try {
 

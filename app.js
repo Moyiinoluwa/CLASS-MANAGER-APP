@@ -10,6 +10,26 @@ const app = express();
 const PORT = process.env.PORT || 3002
 
 
+
+app.use('/Assignment', express.static('Assignment'));
+
+ 
+//connection string
+connectdb()
+
+//json parser
+app.use(express.json())
+
+//api routes
+app.use('/api/students', require('./Routes/studentRoutes'));
+app.use('/api/teachers', require('./Routes/teacherRoutes'));
+app.use('/api/admin', require('./Routes/adminRoutes'));
+
+
+//error middleware
+errorHandler();
+
+
 const swaggerOptions = {
    swaggerDefinition:  {
       openapi: '3.0.0',
@@ -24,32 +44,13 @@ const swaggerOptions = {
       },
       schemes: ['http', 'https'],
    },
-   apis:['Routes/*.js']
+   apis:['Controlers/*.js']
 }
   
 //open an instance for swagger
 const swaggerDocs = swaggerJSDoc(swaggerOptions)
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs))
 
-
-
-app.use('/Assignment', express.static('Assignment'));
-
- 
-//connection string
-connectdb()
-
-//json parser
-app.use(express.json())
-
-//middleware
-app.use('/api/students', require('./Routes/studentRoutes'));
-app.use('/api/teachers', require('./Routes/teacherRoutes'));
-app.use('/api/admin', require('./Routes/adminRoutes'));
-
-
-//error middleware
-errorHandler();
 
 app.get('/', (req, res) => {
    res.send('Welcome to the Class Manager API!');
