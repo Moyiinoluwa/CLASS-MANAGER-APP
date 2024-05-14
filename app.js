@@ -10,7 +10,6 @@ const app = express();
 const PORT = process.env.PORT || 3002
 
 
-
 app.use('/Assignment', express.static('Assignment'));
 
  

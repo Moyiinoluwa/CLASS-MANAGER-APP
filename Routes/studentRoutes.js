@@ -54,7 +54,7 @@ router.post('/message-student/:sender_id/:receiver_id', validate, Controller.mes
 router.get('/view-profile', validate, Controller.viewStudentProfile)
 
 //search for a student
-router.post('/student-page', validate, Controller.studentSearch) 
+router.get('/student-page', validate, Controller.studentSearch) 
 
 //student downloads assignment
 // router.get('/download-assignment/:id', validate, Controller.downloadAssignment)
